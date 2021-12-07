@@ -17,8 +17,8 @@ impl Material {
         let flags = reader.read_u32::<LittleEndian>()?;
         let _name_hash = reader.read_u32::<LittleEndian>()?;
         let additive_lighting_model = reader.read_i32::<LittleEndian>()? != 0;
-        let colour = Rgba::decode(reader)?;
-        let specular = Rgba::decode(reader)?;
+        let colour = Rgba::decode_i32(reader)?;
+        let specular = Rgba::decode_i32(reader)?;
         let power = reader.read_f32::<LittleEndian>()?;
         let shading_mode = reader.read_i32::<LittleEndian>()?;
         let blend = reader.read_i32::<LittleEndian>()? != 0;
@@ -76,7 +76,7 @@ impl Material {
                 mask_name.push(reader.read_i32::<LittleEndian>()? as u8 as char);
             }
             let mask_name = mask_name.into_iter().collect::<String>();
-            let border_colour = Rgba::decode(reader)?;
+            let border_colour = Rgba::decode_i32(reader)?;
             let hash = reader.read_u32::<LittleEndian>()?;
 
             let texture = MaterialTexture {

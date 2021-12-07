@@ -117,12 +117,21 @@ impl Rgba {
         Self { r, g, b, a }
     }
 
-    pub(crate) fn decode(reader: &mut impl Read) -> io::Result<Self> {
+    pub(crate) fn decode_i32(reader: &mut impl Read) -> io::Result<Self> {
         Ok(Self::new(
             reader.read_i32::<LittleEndian>()? as u8,
             reader.read_i32::<LittleEndian>()? as u8,
             reader.read_i32::<LittleEndian>()? as u8,
             reader.read_i32::<LittleEndian>()? as u8,
+        ))
+    }
+
+    pub(crate) fn decode_u8(reader: &mut impl Read) -> io::Result<Self> {
+        Ok(Self::new(
+            reader.read_u8()?,
+            reader.read_u8()?,
+            reader.read_u8()?,
+            reader.read_u8()?,
         ))
     }
 }

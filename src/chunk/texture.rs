@@ -46,12 +46,12 @@ impl Texture {
         let address = reader.read_i32::<LittleEndian>()?;
         let format = reader.read_i32::<LittleEndian>()?;
 
-        let border_color = Rgba::decode(reader)?;
+        let border_color = Rgba::decode_i32(reader)?;
 
         let mut pixels = Vec::with_capacity((width * height) as usize);
 
         for _ in 0..width * height {
-            pixels.push(Rgba::decode(reader)?);
+            pixels.push(Rgba::decode_i32(reader)?);
         }
 
         Ok(Texture {
