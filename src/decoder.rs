@@ -1,6 +1,6 @@
 use std::{error::Error, io::Read};
 
-use crate::{ChunkHeader, ChunkType, Material, Texture};
+use crate::{ChunkHeader, ChunkType, Material, Texture, World};
 use byteorder::{LittleEndian, ReadBytesExt};
 use bytes::Bytes;
 use flate2::read::GzDecoder;
@@ -38,7 +38,10 @@ impl BspDecoder {
                     let material = Material::decode(&mut decoder)?;
 
                     //println!("{:X}", material.get_hash());
-                }
+                },
+                ChunkType::World => {
+                    let world = World::decode(&mut decoder)?;
+                },
                 _ => decoder.read_exact(vec![0u8; chunk_header.get_size() as usize].as_mut())?,
             }
         }

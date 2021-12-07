@@ -76,6 +76,35 @@ impl From<Vector3> for Vector4 {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Rgb {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+}
+
+impl Rgb {
+    pub fn new(r: u8, g: u8, b: u8) -> Self {
+        Self { r, g, b }
+    }
+
+    pub(crate) fn decode_i32(reader: &mut impl Read) -> io::Result<Self> {
+        Ok(Self::new(
+            reader.read_i32::<LittleEndian>()? as u8,
+            reader.read_i32::<LittleEndian>()? as u8,
+            reader.read_i32::<LittleEndian>()? as u8,
+        ))
+    }
+
+    pub(crate) fn decode_u8(reader: &mut impl Read) -> io::Result<Self> {
+        Ok(Self::new(
+            reader.read_u8()?,
+            reader.read_u8()?,
+            reader.read_u8()?,
+        ))
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Rgba {
     pub r: u8,
     pub g: u8,
@@ -94,6 +123,30 @@ impl Rgba {
             reader.read_i32::<LittleEndian>()? as u8,
             reader.read_i32::<LittleEndian>()? as u8,
             reader.read_i32::<LittleEndian>()? as u8,
+        ))
+    }
+}
+
+impl From<Rgb> for Rgba {
+    fn from(rgb: Rgb) -> Self {
+        Self::new(rgb.r, rgb.g, rgb.b, 0)
+    }
+}
+
+pub struct BoundingBox {
+    pub supremum: Vector3,
+    pub infimum: Vector3,
+}
+
+impl BoundingBox {
+    pub fn new(supremum: Vector3, infimum: Vector3) -> Self {
+        Self { supremum, infimum }
+    }
+
+    pub(crate) fn decode(reader: &mut impl Read) -> io::Result<Self> {
+        Ok(Self::new(
+            Vector3::decode(reader)?,
+            Vector3::decode(reader)?,
         ))
     }
 }

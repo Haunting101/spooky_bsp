@@ -1,8 +1,10 @@
 mod material;
 mod texture;
+mod world;
 
 pub use material::*;
 pub use texture::*;
+pub use world::*;
 
 use std::{error::Error, io::Read};
 
