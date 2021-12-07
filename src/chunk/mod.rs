@@ -1,8 +1,10 @@
 mod material;
+mod mesh;
 mod texture;
 mod world;
 
 pub use material::*;
+pub use mesh::*;
 pub use texture::*;
 pub use world::*;
 
