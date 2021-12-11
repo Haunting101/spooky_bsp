@@ -1,6 +1,6 @@
 use std::{error::Error, io::Read};
 
-use crate::{ChunkHeader, ChunkType, Material, Texture, World, Mesh, ModelPart, SectorOctree};
+use crate::{ChunkHeader, ChunkType, Material, Texture, World, Mesh, ModelPart, SectorOctree, Occlusion};
 use byteorder::{LittleEndian, ReadBytesExt};
 use bytes::Bytes;
 use flate2::read::GzDecoder;
@@ -50,6 +50,9 @@ impl BspDecoder {
                 },
                 ChunkType::SectorOctree => {
                     let sector_octree = SectorOctree::decode(&mut decoder)?;
+                },
+                ChunkType::Occlusion => {
+                    let occlusion = Occlusion::decode(&mut decoder)?;
                 },
                 _ => decoder.read_exact(vec![0u8; chunk_header.get_size() as usize].as_mut())?,
             }

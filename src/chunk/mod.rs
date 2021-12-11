@@ -1,6 +1,7 @@
 mod material;
 mod mesh;
 mod model_part;
+mod occlusion;
 mod sector_octree;
 mod texture;
 mod world;
@@ -8,6 +9,7 @@ mod world;
 pub use material::*;
 pub use mesh::*;
 pub use model_part::*;
+pub use occlusion::*;
 pub use sector_octree::*;
 pub use texture::*;
 pub use world::*;
