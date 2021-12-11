@@ -1,8 +1,8 @@
-use std::io::{Read, self};
+use std::io::{self, Read};
 
-use byteorder::{ReadBytesExt, LittleEndian};
+use byteorder::{LittleEndian, ReadBytesExt};
 
-use crate::{Vector3, Rgba};
+use crate::{Rgba, Vector3};
 
 const HAS_VERTEX: u32 = 1 << 8;
 const HAS_NORMAL: u32 = 1 << 9;
@@ -62,7 +62,7 @@ impl ModelPart {
 
         let mut vertices = Vec::with_capacity(vertex_count as usize);
 
-        for vertex_index in 0 .. vertex_count {
+        for vertex_index in 0..vertex_count {
             let vertex = Vertex::decode(reader, flags)?;
 
             vertices.push(vertex);
@@ -157,13 +157,21 @@ impl Vertex {
 
         let mut uvs = Vec::with_capacity((flags & UV_COUNT_MASK) as usize);
 
-        for i in 0 .. flags & UV_COUNT_MASK {
+        for i in 0..flags & UV_COUNT_MASK {
             let u = reader.read_f32::<LittleEndian>()?;
             let v = reader.read_f32::<LittleEndian>()?;
 
             uvs.push((u, v));
         }
 
-        Ok(Self { vertex, normal, reciprocal_homogeneous_w, diffuse, weight, indices, uvs })
+        Ok(Self {
+            vertex,
+            normal,
+            reciprocal_homogeneous_w,
+            diffuse,
+            weight,
+            indices,
+            uvs,
+        })
     }
 }

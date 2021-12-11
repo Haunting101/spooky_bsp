@@ -1,4 +1,4 @@
-use std::io::{Read, self};
+use std::io::{self, Read};
 
 use byteorder::{LittleEndian, ReadBytesExt};
 
@@ -11,7 +11,11 @@ pub struct SectorOctree {
 }
 
 impl SectorOctree {
-    pub fn new(blocks: Vec<SectorOctreeBlock>, leaves: Vec<SectorOctreeLeaf>, octants: Vec<SectorOctreeOctant>) -> Self {
+    pub fn new(
+        blocks: Vec<SectorOctreeBlock>,
+        leaves: Vec<SectorOctreeLeaf>,
+        octants: Vec<SectorOctreeOctant>,
+    ) -> Self {
         Self {
             blocks,
             leaves,
@@ -24,7 +28,7 @@ impl SectorOctree {
 
         let mut blocks = Vec::with_capacity(octree_blocks_count as usize);
 
-        for octree_block_index in 0 .. octree_blocks_count {
+        for octree_block_index in 0..octree_blocks_count {
             let material_block_index = reader.read_u32::<LittleEndian>()?;
 
             blocks.push(SectorOctreeBlock::new(material_block_index));
@@ -34,20 +38,25 @@ impl SectorOctree {
 
         let mut leaves = Vec::with_capacity(leaves_count as usize);
 
-        for leaf_index in 0 .. leaves_count {
+        for leaf_index in 0..leaves_count {
             let sector_floor_flag = reader.read_u32::<LittleEndian>()?;
             let world_blocks_count = reader.read_i32::<LittleEndian>()?;
             let zone_count = reader.read_u32::<LittleEndian>()?;
             let zone = reader.read_u32::<LittleEndian>()?;
 
-            leaves.push(SectorOctreeLeaf::new(sector_floor_flag, world_blocks_count, zone_count, zone));
+            leaves.push(SectorOctreeLeaf::new(
+                sector_floor_flag,
+                world_blocks_count,
+                zone_count,
+                zone,
+            ));
         }
 
         let octants_count = reader.read_i32::<LittleEndian>()?;
 
         let mut octants = Vec::with_capacity(octants_count as usize);
 
-        for octant_index in 0 .. octants_count {
+        for octant_index in 0..octants_count {
             let bounds = BoundingBox::decode(reader)?;
             let flags = reader.read_u32::<LittleEndian>()?;
             let is_leaf = reader.read_u32::<LittleEndian>()? != 0;
@@ -59,7 +68,11 @@ impl SectorOctree {
             } else {
                 let subtree_index = reader.read_u32::<LittleEndian>()?;
 
-                octants.push(SectorOctreeOctant::new_subtree(bounds, flags, subtree_index));
+                octants.push(SectorOctreeOctant::new_subtree(
+                    bounds,
+                    flags,
+                    subtree_index,
+                ));
             }
         }
 
@@ -87,7 +100,12 @@ pub struct SectorOctreeLeaf {
 }
 
 impl SectorOctreeLeaf {
-    pub fn new(sector_floor_flag: u32, world_blocks_count: i32, zone_count: u32, zone: u32) -> Self {
+    pub fn new(
+        sector_floor_flag: u32,
+        world_blocks_count: i32,
+        zone_count: u32,
+        zone: u32,
+    ) -> Self {
         Self {
             sector_floor_flag,
             world_blocks_count,

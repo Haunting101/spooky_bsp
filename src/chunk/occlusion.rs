@@ -1,4 +1,4 @@
-use std::io::{Read, self};
+use std::io::{self, Read};
 
 use byteorder::{LittleEndian, ReadBytesExt};
 
@@ -14,7 +14,7 @@ impl Occlusion {
 
         let mut branches = Vec::with_capacity(branches_count as usize);
 
-        for branch_index in 0 .. branches_count {
+        for branch_index in 0..branches_count {
             let plane = Plane::decode(reader)?;
 
             let negative_leaf;
@@ -36,24 +36,27 @@ impl Occlusion {
                 positive = reader.read_u32::<LittleEndian>()?; // 32 bit void*
             }
 
-            branches.push(OcclusionBranch::new(plane, negative_leaf, negative, positive_leaf, positive));
+            branches.push(OcclusionBranch::new(
+                plane,
+                negative_leaf,
+                negative,
+                positive_leaf,
+                positive,
+            ));
         }
 
         let leaf_count = reader.read_u32::<LittleEndian>()?;
 
         let mut leaves = Vec::with_capacity(leaf_count as usize);
 
-        for leaf_index in 0 .. leaf_count {
+        for leaf_index in 0..leaf_count {
             let faces = reader.read_u32::<LittleEndian>()?;
             let have_occlusion_meshes = reader.read_i32::<LittleEndian>()? != 0;
 
             leaves.push(OcclusionLeaf::new(faces, have_occlusion_meshes));
         }
 
-        Ok(Occlusion {
-            branches,
-            leaves,
-        })
+        Ok(Occlusion { branches, leaves })
     }
 }
 
@@ -66,7 +69,13 @@ pub struct OcclusionBranch {
 }
 
 impl OcclusionBranch {
-    pub fn new(plane: Plane, negative_leaf: u32, negative: u32, positive_leaf: u32, positive: u32) -> Self {
+    pub fn new(
+        plane: Plane,
+        negative_leaf: u32,
+        negative: u32,
+        positive_leaf: u32,
+        positive: u32,
+    ) -> Self {
         Self {
             plane,
             negative_leaf,
@@ -92,9 +101,7 @@ impl OcclusionLeaf {
 }
 
 // TODO
-pub struct Plane {
-
-}
+pub struct Plane {}
 
 impl Plane {
     pub(crate) fn decode(reader: &mut impl Read) -> io::Result<Plane> {

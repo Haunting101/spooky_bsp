@@ -1,4 +1,4 @@
-use std::io::{Read, self};
+use std::io::{self, Read};
 
 use byteorder::{LittleEndian, ReadBytesExt};
 
@@ -22,6 +22,13 @@ impl Mesh {
         let radius = reader.read_f32::<LittleEndian>()?;
         let have_bsp = reader.read_i32::<LittleEndian>()? != 0;
 
-        Ok(Mesh { flags, material_blocks_count, bounds, center, radius, have_bsp })
+        Ok(Mesh {
+            flags,
+            material_blocks_count,
+            bounds,
+            center,
+            radius,
+            have_bsp,
+        })
     }
 }

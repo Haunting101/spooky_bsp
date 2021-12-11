@@ -1,4 +1,4 @@
-use std::io::{Read, self};
+use std::io::{self, Read};
 
 use byteorder::{LittleEndian, ReadBytesExt};
 
@@ -24,7 +24,7 @@ impl World {
 
         let mut floors = Vec::with_capacity(floor_count as usize);
 
-        for floor_index in 0 .. floor_count {
+        for floor_index in 0..floor_count {
             let floor = Floor::decode(reader)?;
 
             floors.push(floor);
@@ -36,8 +36,17 @@ impl World {
         let have_nulls = reader.read_i32::<LittleEndian>()? != 0;
         let have_waypoints = reader.read_i32::<LittleEndian>()? != 0;
         let have_mesh = reader.read_i32::<LittleEndian>()? != 0;
-        
-        Ok(Self { flags, ambient, floors, zone_count, have_occlusion_bsp, have_nulls, have_waypoints, have_mesh })
+
+        Ok(Self {
+            flags,
+            ambient,
+            floors,
+            zone_count,
+            have_occlusion_bsp,
+            have_nulls,
+            have_waypoints,
+            have_mesh,
+        })
     }
 }
 
@@ -48,7 +57,10 @@ pub struct Floor {
 
 impl Floor {
     pub fn new(occlusion_bsp: u32, ghost_camera: BoundingBox) -> Self {
-        Self { occlusion_bsp, ghost_camera }
+        Self {
+            occlusion_bsp,
+            ghost_camera,
+        }
     }
 
     pub(crate) fn decode(reader: &mut impl Read) -> io::Result<Self> {

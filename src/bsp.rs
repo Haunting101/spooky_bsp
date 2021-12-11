@@ -1,4 +1,4 @@
-use crate::{Texture, Material, World, Mesh, ModelPart, SectorOctree, Occlusion};
+use crate::{Material, Mesh, ModelPart, Occlusion, SectorOctree, Texture, World};
 
 pub struct Bsp {
     textures: Vec<Texture>,
@@ -11,7 +11,15 @@ pub struct Bsp {
 }
 
 impl Bsp {
-    pub fn new(textures: Vec<Texture>, materials: Vec<Material>, worlds: Vec<World>, meshes: Vec<Mesh>, model_parts: Vec<ModelPart>, octree_sectors: Vec<SectorOctree>, occlusions: Vec<Occlusion>) -> Self {
+    pub fn new(
+        textures: Vec<Texture>,
+        materials: Vec<Material>,
+        worlds: Vec<World>,
+        meshes: Vec<Mesh>,
+        model_parts: Vec<ModelPart>,
+        octree_sectors: Vec<SectorOctree>,
+        occlusions: Vec<Occlusion>,
+    ) -> Self {
         Self {
             textures,
             materials,
