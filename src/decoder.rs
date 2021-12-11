@@ -4,20 +4,13 @@ use crate::{
     Bsp, ChunkHeader, ChunkType, Material, Mesh, ModelPart, Occlusion, SectorOctree, Texture, World,
 };
 use byteorder::{LittleEndian, ReadBytesExt};
-use bytes::Bytes;
 use flate2::read::GzDecoder;
 
-pub struct BspDecoder {
-    bytes: Bytes,
-}
+pub struct BspDecoder;
 
 impl BspDecoder {
-    pub fn new(bytes: Bytes) -> Self {
-        Self { bytes }
-    }
-
-    pub fn decode(&self) -> Result<Bsp, Box<dyn Error>> {
-        let mut decoder = GzDecoder::new(self.bytes.as_ref());
+    pub fn decode(reader: impl Read) -> Result<Bsp, Box<dyn Error>> {
+        let mut decoder = GzDecoder::new(reader);
 
         let mut textures = Vec::new();
         let mut materials = Vec::new();
@@ -95,14 +88,12 @@ impl BspDecoder {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
+    use std::fs::File;
 
     use super::*;
 
     #[test]
     fn decode_file_test() {
-        let decoder = BspDecoder::new(Bytes::copy_from_slice(&fs::read("Darkling.bsp").unwrap()));
-
-        decoder.decode().unwrap();
+        BspDecoder::decode(File::open("Darkling.bsp").unwrap()).unwrap();
     }
 }
