@@ -3,8 +3,8 @@ use std::io::{self, Read};
 use byteorder::{LittleEndian, ReadBytesExt};
 
 pub struct Occlusion {
-    branches: Vec<OcclusionBranch>,
-    leaves: Vec<OcclusionLeaf>,
+    pub branches: Vec<OcclusionBranch>,
+    pub leaves: Vec<OcclusionLeaf>,
 }
 
 impl Occlusion {
@@ -61,11 +61,11 @@ impl Occlusion {
 }
 
 pub struct OcclusionBranch {
-    plane: Plane,
-    negative_leaf: u32,
-    negative: u32,
-    positive_leaf: u32,
-    positive: u32,
+    pub plane: Plane,
+    pub negative_leaf: u32,
+    pub negative: u32,
+    pub positive_leaf: u32,
+    pub positive: u32,
 }
 
 impl OcclusionBranch {
@@ -87,8 +87,8 @@ impl OcclusionBranch {
 }
 
 pub struct OcclusionLeaf {
-    faces: u32,
-    have_occlusion_meshes: bool,
+    pub faces: u32,
+    pub have_occlusion_meshes: bool,
 }
 
 impl OcclusionLeaf {

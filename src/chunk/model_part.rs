@@ -13,27 +13,27 @@ const HAS_INDICES: u32 = 1 << 13;
 const UV_COUNT_MASK: u32 = 0xFF;
 
 pub struct ModelPart {
-    read_access_flags: u32,
-    vertex_read_flags: u32,
-    write_access_flags: u32,
-    vertex_write_flags: u32,
-    hint_flags: u32,
-    constant_flags: u32,
-    vertex_flags: u32,
-    render_flags: u32,
-    triangles_count: u16,
-    strips_count: u16,
-    strip_triangles_count: u16,
-    material_hash: u32,
-    triangle_index0: i32,
-    triangle_index1: i32,
-    vertex_index0: i32,
-    vertex_index1: i32,
-    layer_z: u32,
-    floor_flags: u32,
-    flags: u32,
-    lighting_sid: u32,
-    vertices: Vec<Vertex>,
+    pub read_access_flags: u32,
+    pub vertex_read_flags: u32,
+    pub write_access_flags: u32,
+    pub vertex_write_flags: u32,
+    pub hint_flags: u32,
+    pub constant_flags: u32,
+    pub vertex_flags: u32,
+    pub render_flags: u32,
+    pub triangles_count: u16,
+    pub strips_count: u16,
+    pub strip_triangles_count: u16,
+    pub material_hash: u32,
+    pub triangle_index0: i32,
+    pub triangle_index1: i32,
+    pub vertex_index0: i32,
+    pub vertex_index1: i32,
+    pub layer_z: u32,
+    pub floor_flags: u32,
+    pub flags: u32,
+    pub lighting_sid: u32,
+    pub vertices: Vec<Vertex>,
 }
 
 impl ModelPart {
@@ -95,13 +95,13 @@ impl ModelPart {
 }
 
 pub struct Vertex {
-    vertex: Option<Vector3>,
-    normal: Option<Vector3>,
-    reciprocal_homogeneous_w: Option<u32>,
-    diffuse: Option<Rgba>,
-    weight: Option<f32>,
-    indices: Option<(u16, u16)>,
-    uvs: Vec<(f32, f32)>,
+    pub vertex: Option<Vector3>,
+    pub normal: Option<Vector3>,
+    pub reciprocal_homogeneous_w: Option<u32>,
+    pub diffuse: Option<Rgba>,
+    pub weight: Option<f32>,
+    pub indices: Option<(u16, u16)>,
+    pub uvs: Vec<(f32, f32)>,
 }
 
 impl Vertex {

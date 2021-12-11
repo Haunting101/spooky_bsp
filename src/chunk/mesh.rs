@@ -5,12 +5,12 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use crate::{BoundingBox, Vector3};
 
 pub struct Mesh {
-    flags: u32,
-    material_blocks_count: u16,
-    bounds: BoundingBox,
-    center: Vector3,
-    radius: f32,
-    have_bsp: bool,
+    pub flags: u32,
+    pub material_blocks_count: u16,
+    pub bounds: BoundingBox,
+    pub center: Vector3,
+    pub radius: f32,
+    pub have_bsp: bool,
 }
 
 impl Mesh {

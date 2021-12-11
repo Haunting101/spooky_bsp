@@ -5,9 +5,9 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use crate::BoundingBox;
 
 pub struct SectorOctree {
-    blocks: Vec<SectorOctreeBlock>,
-    leaves: Vec<SectorOctreeLeaf>,
-    octants: Vec<SectorOctreeOctant>,
+    pub blocks: Vec<SectorOctreeBlock>,
+    pub leaves: Vec<SectorOctreeLeaf>,
+    pub octants: Vec<SectorOctreeOctant>,
 }
 
 impl SectorOctree {
@@ -81,7 +81,7 @@ impl SectorOctree {
 }
 
 pub struct SectorOctreeBlock {
-    material_block_index: u32,
+    pub material_block_index: u32,
 }
 
 impl SectorOctreeBlock {
@@ -93,10 +93,10 @@ impl SectorOctreeBlock {
 }
 
 pub struct SectorOctreeLeaf {
-    sector_floor_flag: u32,
-    world_blocks_count: i32,
-    zone_count: u32,
-    zone: u32,
+    pub sector_floor_flag: u32,
+    pub world_blocks_count: i32,
+    pub zone_count: u32,
+    pub zone: u32,
 }
 
 impl SectorOctreeLeaf {

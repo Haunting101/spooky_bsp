@@ -5,14 +5,14 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use crate::{BoundingBox, Rgb, Rgba};
 
 pub struct World {
-    flags: u32,
-    ambient: Rgba,
-    floors: Vec<Floor>,
-    zone_count: i32,
-    have_occlusion_bsp: bool,
-    have_nulls: bool,
-    have_waypoints: bool,
-    have_mesh: bool,
+    pub flags: u32,
+    pub ambient: Rgba,
+    pub floors: Vec<Floor>,
+    pub zone_count: i32,
+    pub have_occlusion_bsp: bool,
+    pub have_nulls: bool,
+    pub have_waypoints: bool,
+    pub have_mesh: bool,
 }
 
 impl World {
@@ -51,8 +51,8 @@ impl World {
 }
 
 pub struct Floor {
-    occlusion_bsp: u32,
-    ghost_camera: BoundingBox,
+    pub occlusion_bsp: u32,
+    pub ghost_camera: BoundingBox,
 }
 
 impl Floor {

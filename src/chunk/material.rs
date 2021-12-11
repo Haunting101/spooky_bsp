@@ -7,9 +7,9 @@ use crate::{hash, Matrix, Rgba};
 use byteorder::{LittleEndian, ReadBytesExt};
 
 pub struct Material {
-    material_hash: u32,
-    attributes: Attributes,
-    textures: [MaterialTexture; 5],
+    pub material_hash: u32,
+    pub attributes: Attributes,
+    pub textures: [MaterialTexture; 5],
 }
 
 impl Material {
@@ -162,43 +162,43 @@ impl Material {
 #[repr(C)]
 #[derive(Default)]
 pub struct Attributes {
-    flags: u32,
-    additive_lighting_model: bool,
-    colour: Rgba,
-    specular: Rgba,
-    power: f32,
-    shading_mode: i32,
-    depth_buffer_write: bool,
-    depth_buffer_comparison_mode: i32,
-    blend: bool,
-    blend_modes: BlendModes,
-    alpha_test: bool,
-    alpha_test_mode: AlphaTestMode,
-    owner: u32,
-    colour_buffer_write: u32,
-    use_matrices: [bool; 5],
-    generators: [i32; 5],
-    uv_sets: [u32; 5],
-    texture_hashes: [u32; 5],
-    envmap_type: i32,
-    planar_sheer_envmap_distance: f32,
+    pub flags: u32,
+    pub additive_lighting_model: bool,
+    pub colour: Rgba,
+    pub specular: Rgba,
+    pub power: f32,
+    pub shading_mode: i32,
+    pub depth_buffer_write: bool,
+    pub depth_buffer_comparison_mode: i32,
+    pub blend: bool,
+    pub blend_modes: BlendModes,
+    pub alpha_test: bool,
+    pub alpha_test_mode: AlphaTestMode,
+    pub owner: u32,
+    pub colour_buffer_write: u32,
+    pub use_matrices: [bool; 5],
+    pub generators: [i32; 5],
+    pub uv_sets: [u32; 5],
+    pub texture_hashes: [u32; 5],
+    pub envmap_type: i32,
+    pub planar_sheer_envmap_distance: f32,
 }
 
 #[derive(Default)]
 pub struct MaterialTexture {
-    uv_set: u32,
-    name: String,
-    format: i32,
-    address: i32,
-    mask_name: String,
-    border_colour: Rgba,
-    hash: u32,
+    pub uv_set: u32,
+    pub name: String,
+    pub format: i32,
+    pub address: i32,
+    pub mask_name: String,
+    pub border_colour: Rgba,
+    pub hash: u32,
 }
 
 #[derive(Default, Debug)]
 pub struct BlendModes {
-    source_mode: i32,
-    destionation_mode: i32,
+    pub source_mode: i32,
+    pub destionation_mode: i32,
 }
 
 impl BlendModes {
@@ -212,8 +212,8 @@ impl BlendModes {
 
 #[derive(Default, Debug)]
 pub struct AlphaTestMode {
-    comparision_function: i32,
-    reference: f32,
+    pub comparision_function: i32,
+    pub reference: f32,
 }
 
 impl AlphaTestMode {
