@@ -1,12 +1,10 @@
-use std::io::{self, Read};
+use std::io::Read;
 
-use byteorder::{LittleEndian, ReadBytesExt};
-
-use crate::{BoundingBox, Rgb, Rgba};
+use crate::{BoundingBox, Decode, Rgb, Rgba};
 
 pub struct World {
     pub flags: u32,
-    pub ambient: Rgba,
+    pub ambient: Rgba<u8>,
     pub floors: Vec<Floor>,
     pub zone_count: i32,
     pub have_occlusion_bsp: bool,
@@ -16,28 +14,17 @@ pub struct World {
 }
 
 impl World {
-    pub(crate) fn decode(reader: &mut impl Read) -> io::Result<Self> {
-        let flags = reader.read_u32::<LittleEndian>()?;
-        let ambient = Rgb::decode_u8(reader)?.into();
-
-        let floor_count = reader.read_i32::<LittleEndian>()?;
-
-        let mut floors = Vec::with_capacity(floor_count as usize);
-
-        for floor_index in 0..floor_count {
-            let floor = Floor::decode(reader)?;
-
-            floors.push(floor);
-        }
-
-        let zone_count = reader.read_i32::<LittleEndian>()?;
-
-        let have_occlusion_bsp = reader.read_i32::<LittleEndian>()? != 0;
-        let have_nulls = reader.read_i32::<LittleEndian>()? != 0;
-        let have_waypoints = reader.read_i32::<LittleEndian>()? != 0;
-        let have_mesh = reader.read_i32::<LittleEndian>()? != 0;
-
-        Ok(Self {
+    pub fn new(
+        flags: u32,
+        ambient: Rgba<u8>,
+        floors: Vec<Floor>,
+        zone_count: i32,
+        have_occlusion_bsp: bool,
+        have_nulls: bool,
+        have_waypoints: bool,
+        have_mesh: bool,
+    ) -> Self {
+        Self {
             flags,
             ambient,
             floors,
@@ -46,7 +33,31 @@ impl World {
             have_nulls,
             have_waypoints,
             have_mesh,
-        })
+        }
+    }
+}
+
+impl Decode for World {
+    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
+        let flags = u32::decode(reader)?;
+        let ambient = Rgb::<u8>::decode(reader)?.into();
+        let floors = Vec::decode(reader)?;
+        let zone_count = i32::decode(reader)?;
+        let have_occlusion_bsp = bool::decode(reader)?;
+        let have_nulls = bool::decode(reader)?;
+        let have_waypoints = bool::decode(reader)?;
+        let have_mesh = bool::decode(reader)?;
+
+        Ok(Self::new(
+            flags,
+            ambient,
+            floors,
+            zone_count,
+            have_occlusion_bsp,
+            have_nulls,
+            have_waypoints,
+            have_mesh,
+        ))
     }
 }
 
@@ -62,9 +73,11 @@ impl Floor {
             ghost_camera,
         }
     }
+}
 
-    pub(crate) fn decode(reader: &mut impl Read) -> io::Result<Self> {
-        let occlusion_bsp = reader.read_u32::<LittleEndian>()?;
+impl Decode for Floor {
+    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
+        let occlusion_bsp = u32::decode(reader)?;
         let ghost_camera = BoundingBox::decode(reader)?;
 
         Ok(Self::new(occlusion_bsp, ghost_camera))

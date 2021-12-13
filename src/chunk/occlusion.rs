@@ -1,6 +1,5 @@
-use std::io::{self, Read};
-
-use byteorder::{LittleEndian, ReadBytesExt};
+use crate::{Decode, Plane};
+use std::io::Read;
 
 pub struct Occlusion {
     pub branches: Vec<OcclusionBranch>,
@@ -8,9 +7,15 @@ pub struct Occlusion {
 }
 
 impl Occlusion {
-    pub(crate) fn decode(reader: &mut impl Read) -> io::Result<Occlusion> {
-        let is_plane_bsp = reader.read_i32::<LittleEndian>()? != 0;
-        let branches_count = reader.read_u32::<LittleEndian>()?;
+    pub fn new(branches: Vec<OcclusionBranch>, leaves: Vec<OcclusionLeaf>) -> Self {
+        Self { branches, leaves }
+    }
+}
+
+impl Decode for Occlusion {
+    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
+        let is_plane_bsp = bool::decode(reader)?;
+        let branches_count = u32::decode(reader)?;
 
         let mut branches = Vec::with_capacity(branches_count as usize);
 
@@ -23,17 +28,17 @@ impl Occlusion {
             let positive;
 
             if is_plane_bsp {
-                negative_leaf = reader.read_u32::<LittleEndian>()?;
+                negative_leaf = u32::decode(reader)?;
                 // TODO
                 negative = 0;
-                positive_leaf = reader.read_u32::<LittleEndian>()?;
+                positive_leaf = u32::decode(reader)?;
                 // TODO
                 positive = 0;
             } else {
-                negative_leaf = reader.read_u32::<LittleEndian>()?;
-                negative = reader.read_u32::<LittleEndian>()?; // 32 bit void*
-                positive_leaf = reader.read_u32::<LittleEndian>()?;
-                positive = reader.read_u32::<LittleEndian>()?; // 32 bit void*
+                negative_leaf = u32::decode(reader)?;
+                negative = u32::decode(reader)?; // 32 bit void*
+                positive_leaf = u32::decode(reader)?;
+                positive = u32::decode(reader)?; // 32 bit void*
             }
 
             branches.push(OcclusionBranch::new(
@@ -45,18 +50,9 @@ impl Occlusion {
             ));
         }
 
-        let leaf_count = reader.read_u32::<LittleEndian>()?;
+        let leaves = Vec::decode(reader)?;
 
-        let mut leaves = Vec::with_capacity(leaf_count as usize);
-
-        for leaf_index in 0..leaf_count {
-            let faces = reader.read_u32::<LittleEndian>()?;
-            let have_occlusion_meshes = reader.read_i32::<LittleEndian>()? != 0;
-
-            leaves.push(OcclusionLeaf::new(faces, have_occlusion_meshes));
-        }
-
-        Ok(Occlusion { branches, leaves })
+        Ok(Occlusion::new(branches, leaves))
     }
 }
 
@@ -100,16 +96,11 @@ impl OcclusionLeaf {
     }
 }
 
-// TODO
-pub struct Plane {}
-
-impl Plane {
-    pub(crate) fn decode(reader: &mut impl Read) -> io::Result<Plane> {
-        reader.read_f32::<LittleEndian>()?;
-        reader.read_f32::<LittleEndian>()?;
-        reader.read_f32::<LittleEndian>()?;
-        reader.read_f32::<LittleEndian>()?;
-
-        Ok(Plane {})
+impl Decode for OcclusionLeaf {
+    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
+        Ok(OcclusionLeaf::new(
+            u32::decode(reader)?,
+            bool::decode(reader)?,
+        ))
     }
 }

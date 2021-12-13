@@ -14,9 +14,9 @@ pub use sector_octree::*;
 pub use texture::*;
 pub use world::*;
 
-use std::{error::Error, io::Read};
+use crate::Decode;
+use std::io::Read;
 
-use byteorder::{LittleEndian, ReadBytesExt};
 use num_enum::TryFromPrimitive;
 
 #[derive(Debug, TryFromPrimitive)]
@@ -58,14 +58,6 @@ pub(crate) struct ChunkHeader {
 }
 
 impl ChunkHeader {
-    pub(crate) fn decode(reader: &mut impl Read) -> Result<ChunkHeader, Box<dyn Error>> {
-        Ok(ChunkHeader {
-            chunk_type: ChunkType::try_from(reader.read_i32::<LittleEndian>()?)?,
-            size: reader.read_i32::<LittleEndian>()?,
-            version: reader.read_i32::<LittleEndian>()?,
-        })
-    }
-
     pub(crate) fn get_chunk_type(&self) -> &ChunkType {
         &self.chunk_type
     }
@@ -76,5 +68,15 @@ impl ChunkHeader {
 
     pub(crate) fn get_version(&self) -> i32 {
         self.version
+    }
+}
+
+impl Decode for ChunkHeader {
+    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
+        Ok(ChunkHeader {
+            chunk_type: ChunkType::try_from(i32::decode(reader)?)?,
+            size: i32::decode(reader)?,
+            version: i32::decode(reader)?,
+        })
     }
 }

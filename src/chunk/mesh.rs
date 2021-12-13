@@ -1,8 +1,6 @@
-use std::io::{self, Read};
+use std::io::Read;
 
-use byteorder::{LittleEndian, ReadBytesExt};
-
-use crate::{BoundingBox, Vector3};
+use crate::{BoundingBox, Decode, Vector3};
 
 pub struct Mesh {
     pub flags: u32,
@@ -14,21 +12,34 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    pub(crate) fn decode(reader: &mut impl Read) -> io::Result<Mesh> {
-        let flags = reader.read_u32::<LittleEndian>()?;
-        let material_blocks_count = reader.read_u16::<LittleEndian>()?;
-        let bounds = BoundingBox::decode(reader)?;
-        let center = Vector3::decode(reader)?;
-        let radius = reader.read_f32::<LittleEndian>()?;
-        let have_bsp = reader.read_i32::<LittleEndian>()? != 0;
-
-        Ok(Mesh {
+    pub fn new(
+        flags: u32,
+        material_blocks_count: u16,
+        bounds: BoundingBox,
+        center: Vector3,
+        radius: f32,
+        have_bsp: bool,
+    ) -> Self {
+        Self {
             flags,
             material_blocks_count,
             bounds,
             center,
             radius,
             have_bsp,
-        })
+        }
+    }
+}
+
+impl Decode for Mesh {
+    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
+        Ok(Self::new(
+            u32::decode(reader)?,
+            u16::decode(reader)?,
+            BoundingBox::decode(reader)?,
+            Vector3::decode(reader)?,
+            f32::decode(reader)?,
+            bool::decode(reader)?,
+        ))
     }
 }

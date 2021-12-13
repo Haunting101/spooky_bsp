@@ -1,10 +1,6 @@
-use std::{
-    io::{self, Read},
-    slice,
-};
+use std::io::Read;
 
-use crate::{hash, Rgba};
-use byteorder::{LittleEndian, ReadBytesExt};
+use crate::{Decode, Rgba};
 
 pub struct Texture {
     name: String,
@@ -14,59 +10,23 @@ pub struct Texture {
     filter: i32,
     address: i32,
     format: i32,
-    border_color: Rgba,
-    pixels: Vec<Rgba>,
+    border_color: Rgba<i32>,
+    pixels: Vec<Rgba<i32>>,
 }
 
 impl Texture {
-    pub(crate) fn decode(reader: &mut impl Read) -> io::Result<Texture> {
-        let name_length = reader.read_i32::<LittleEndian>()?;
-        let name = if name_length > 0 {
-            let mut name = Vec::with_capacity((name_length - 1) as usize);
-
-            for _ in 0..name_length - 1 {
-                name.push(reader.read_i32::<LittleEndian>()? as u8 as char);
-            }
-
-            // Null terminator
-            reader.read_i32::<LittleEndian>()?;
-
-            name.iter().collect::<String>()
-        } else {
-            String::new()
-        };
-
-        let mask_name_length = reader.read_i32::<LittleEndian>()?;
-        let mask_name = if mask_name_length > 0 {
-            let mut mask_name = Vec::with_capacity((mask_name_length - 1) as usize);
-
-            for _ in 0..mask_name_length - 1 {
-                mask_name.push(reader.read_i32::<LittleEndian>()? as u8 as char);
-            }
-
-            // Null terminator
-            reader.read_i32::<LittleEndian>()?;
-
-            mask_name.into_iter().collect::<String>()
-        } else {
-            String::new()
-        };
-
-        let width = reader.read_i32::<LittleEndian>()?;
-        let height = reader.read_i32::<LittleEndian>()?;
-        let filter = reader.read_i32::<LittleEndian>()?;
-        let address = reader.read_i32::<LittleEndian>()?;
-        let format = reader.read_i32::<LittleEndian>()?;
-
-        let border_color = Rgba::decode_i32(reader)?;
-
-        let mut pixels = Vec::with_capacity((width * height) as usize);
-
-        for _ in 0..width * height {
-            pixels.push(Rgba::decode_i32(reader)?);
-        }
-
-        Ok(Texture {
+    pub fn new(
+        name: String,
+        mask_name: String,
+        width: i32,
+        height: i32,
+        filter: i32,
+        address: i32,
+        format: i32,
+        border_color: Rgba<i32>,
+        pixels: Vec<Rgba<i32>>,
+    ) -> Self {
+        Self {
             name,
             mask_name,
             width,
@@ -76,7 +36,7 @@ impl Texture {
             format,
             border_color,
             pixels,
-        })
+        }
     }
 
     pub fn get_name(&self) -> &String {
@@ -107,22 +67,40 @@ impl Texture {
         self.format
     }
 
-    pub fn get_border_color(&self) -> &Rgba {
+    pub fn get_border_color(&self) -> &Rgba<i32> {
         &self.border_color
     }
 
-    pub fn get_pixels(&self) -> &Vec<Rgba> {
+    pub fn get_pixels(&self) -> &Vec<Rgba<i32>> {
         &self.pixels
     }
+}
 
-    pub fn get_hash(&self) -> u32 {
-        let data = [self.address, self.filter];
+impl Decode for Texture {
+    fn decode(reader: &mut impl Read) -> eyre::Result<Texture> {
+        let name = String::decode(reader)?;
+        let mask_name = String::decode(reader)?;
+        let width = i32::decode(reader)?;
+        let height = i32::decode(reader)?;
+        let filter = i32::decode(reader)?;
+        let address = i32::decode(reader)?;
+        let format = i32::decode(reader)?;
+        let border_color = Rgba::<i32>::decode(reader)?;
+        let pixels = (0..width * height)
+            .into_iter()
+            .map(|_| Rgba::decode(reader))
+            .collect::<Result<Vec<_>, _>>()?;
 
-        hash::hash(unsafe {
-            slice::from_raw_parts(
-                self.pixels.as_ptr() as *const _ as *const u8,
-                (self.width * self.height * 4) as usize,
-            )
-        }) ^ hash::hash(unsafe { slice::from_raw_parts(data.as_ptr() as *const _ as *const u8, 8) })
+        Ok(Texture::new(
+            name,
+            mask_name,
+            width,
+            height,
+            filter,
+            address,
+            format,
+            border_color,
+            pixels,
+        ))
     }
 }

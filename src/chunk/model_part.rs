@@ -1,8 +1,6 @@
-use std::io::{self, Read};
+use std::io::Read;
 
-use byteorder::{LittleEndian, ReadBytesExt};
-
-use crate::{Rgba, Vector3};
+use crate::{Decode, Rgba, Vector3};
 
 const HAS_VERTEX: u32 = 1 << 8;
 const HAS_NORMAL: u32 = 1 << 9;
@@ -37,38 +35,30 @@ pub struct ModelPart {
 }
 
 impl ModelPart {
-    pub(crate) fn decode(reader: &mut impl Read) -> io::Result<Self> {
-        let read_access_flags = reader.read_u32::<LittleEndian>()?;
-        let vertex_read_flags = reader.read_u32::<LittleEndian>()?;
-        let write_access_flags = reader.read_u32::<LittleEndian>()?;
-        let vertex_write_flags = reader.read_u32::<LittleEndian>()?;
-        let hint_flags = reader.read_u32::<LittleEndian>()?;
-        let constant_flags = reader.read_u32::<LittleEndian>()?;
-        let vertex_flags = reader.read_u32::<LittleEndian>()?;
-        let render_flags = reader.read_u32::<LittleEndian>()?;
-        let vertex_count = reader.read_u32::<LittleEndian>()?;
-        let triangles_count = reader.read_u16::<LittleEndian>()?;
-        let strips_count = reader.read_u16::<LittleEndian>()?;
-        let strip_triangles_count = reader.read_u16::<LittleEndian>()?;
-        let material_hash = reader.read_u32::<LittleEndian>()?;
-        let triangle_index0 = reader.read_i32::<LittleEndian>()?;
-        let triangle_index1 = reader.read_i32::<LittleEndian>()?;
-        let vertex_index0 = reader.read_i32::<LittleEndian>()?;
-        let vertex_index1 = reader.read_i32::<LittleEndian>()?;
-        let layer_z = reader.read_u32::<LittleEndian>()?;
-        let floor_flags = reader.read_u32::<LittleEndian>()?;
-        let flags = reader.read_u32::<LittleEndian>()?;
-        let lighting_sid = reader.read_u32::<LittleEndian>()?;
-
-        let mut vertices = Vec::with_capacity(vertex_count as usize);
-
-        for vertex_index in 0..vertex_count {
-            let vertex = Vertex::decode(reader, flags)?;
-
-            vertices.push(vertex);
-        }
-
-        Ok(Self {
+    pub fn new(
+        read_access_flags: u32,
+        vertex_read_flags: u32,
+        write_access_flags: u32,
+        vertex_write_flags: u32,
+        hint_flags: u32,
+        constant_flags: u32,
+        vertex_flags: u32,
+        render_flags: u32,
+        triangles_count: u16,
+        strips_count: u16,
+        strip_triangles_count: u16,
+        material_hash: u32,
+        triangle_index0: i32,
+        triangle_index1: i32,
+        vertex_index0: i32,
+        vertex_index1: i32,
+        layer_z: u32,
+        floor_flags: u32,
+        flags: u32,
+        lighting_sid: u32,
+        vertices: Vec<Vertex>,
+    ) -> Self {
+        Self {
             read_access_flags,
             vertex_read_flags,
             write_access_flags,
@@ -90,7 +80,61 @@ impl ModelPart {
             flags,
             lighting_sid,
             vertices,
-        })
+        }
+    }
+}
+
+impl Decode for ModelPart {
+    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
+        let read_access_flags = u32::decode(reader)?;
+        let vertex_read_flags = u32::decode(reader)?;
+        let write_access_flags = u32::decode(reader)?;
+        let vertex_write_flags = u32::decode(reader)?;
+        let hint_flags = u32::decode(reader)?;
+        let constant_flags = u32::decode(reader)?;
+        let vertex_flags = u32::decode(reader)?;
+        let render_flags = u32::decode(reader)?;
+        let vertex_count = u32::decode(reader)?;
+        let triangles_count = u16::decode(reader)?;
+        let strips_count = u16::decode(reader)?;
+        let strip_triangles_count = u16::decode(reader)?;
+        let material_hash = u32::decode(reader)?;
+        let triangle_index0 = i32::decode(reader)?;
+        let triangle_index1 = i32::decode(reader)?;
+        let vertex_index0 = i32::decode(reader)?;
+        let vertex_index1 = i32::decode(reader)?;
+        let layer_z = u32::decode(reader)?;
+        let floor_flags = u32::decode(reader)?;
+        let flags = u32::decode(reader)?;
+        let lighting_sid = u32::decode(reader)?;
+        let vertices = (0..vertex_count)
+            .into_iter()
+            .map(|_| Vertex::decode(reader, flags))
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(Self::new(
+            read_access_flags,
+            vertex_read_flags,
+            write_access_flags,
+            vertex_write_flags,
+            hint_flags,
+            constant_flags,
+            vertex_flags,
+            render_flags,
+            triangles_count,
+            strips_count,
+            strip_triangles_count,
+            material_hash,
+            triangle_index0,
+            triangle_index1,
+            vertex_index0,
+            vertex_index1,
+            layer_z,
+            floor_flags,
+            flags,
+            lighting_sid,
+            vertices,
+        ))
     }
 }
 
@@ -98,14 +142,34 @@ pub struct Vertex {
     pub vertex: Option<Vector3>,
     pub normal: Option<Vector3>,
     pub reciprocal_homogeneous_w: Option<u32>,
-    pub diffuse: Option<Rgba>,
+    pub diffuse: Option<Rgba<u8>>,
     pub weight: Option<f32>,
     pub indices: Option<(u16, u16)>,
     pub uvs: Vec<(f32, f32)>,
 }
 
 impl Vertex {
-    pub(crate) fn decode(reader: &mut impl Read, flags: u32) -> io::Result<Self> {
+    pub fn new(
+        vertex: Option<Vector3>,
+        normal: Option<Vector3>,
+        reciprocal_homogeneous_w: Option<u32>,
+        diffuse: Option<Rgba<u8>>,
+        weight: Option<f32>,
+        indices: Option<(u16, u16)>,
+        uvs: Vec<(f32, f32)>,
+    ) -> Self {
+        Self {
+            vertex,
+            normal,
+            reciprocal_homogeneous_w,
+            diffuse,
+            weight,
+            indices,
+            uvs,
+        }
+    }
+
+    pub fn decode(reader: &mut impl Read, flags: u32) -> eyre::Result<Self> {
         let vertex = if flags & HAS_VERTEX != 0 {
             let vertex = Vector3::decode(reader)?;
 
@@ -123,7 +187,7 @@ impl Vertex {
         };
 
         let reciprocal_homogeneous_w = if flags & HAS_RECIPROCAL_HOMOGENEOUS_W != 0 {
-            let reciprocal_homogeneous_w = reader.read_u32::<LittleEndian>()?;
+            let reciprocal_homogeneous_w = u32::decode(reader)?;
 
             Some(reciprocal_homogeneous_w)
         } else {
@@ -131,7 +195,7 @@ impl Vertex {
         };
 
         let diffuse = if flags & HAS_DIFFUSE != 0 {
-            let diffuse = Rgba::decode_u8(reader)?;
+            let diffuse = Rgba::<u8>::decode(reader)?;
 
             Some(diffuse)
         } else {
@@ -139,7 +203,7 @@ impl Vertex {
         };
 
         let weight = if flags & HAS_WEIGHT != 0 {
-            let weight = reader.read_f32::<LittleEndian>()?;
+            let weight = f32::decode(reader)?;
 
             Some(weight)
         } else {
@@ -147,8 +211,8 @@ impl Vertex {
         };
 
         let indices = if flags & HAS_INDICES != 0 {
-            let index0 = reader.read_u16::<LittleEndian>()?;
-            let index1 = reader.read_u16::<LittleEndian>()?;
+            let index0 = u16::decode(reader)?;
+            let index1 = u16::decode(reader)?;
 
             Some((index0, index1))
         } else {
@@ -158,13 +222,13 @@ impl Vertex {
         let mut uvs = Vec::with_capacity((flags & UV_COUNT_MASK) as usize);
 
         for i in 0..flags & UV_COUNT_MASK {
-            let u = reader.read_f32::<LittleEndian>()?;
-            let v = reader.read_f32::<LittleEndian>()?;
+            let u = f32::decode(reader)?;
+            let v = f32::decode(reader)?;
 
             uvs.push((u, v));
         }
 
-        Ok(Self {
+        Ok(Self::new(
             vertex,
             normal,
             reciprocal_homogeneous_w,
@@ -172,6 +236,6 @@ impl Vertex {
             weight,
             indices,
             uvs,
-        })
+        ))
     }
 }
