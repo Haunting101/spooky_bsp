@@ -62,20 +62,31 @@ impl Material {
             if name_length <= 0 {
                 continue;
             }
-            let mut name = Vec::with_capacity(name_length as usize);
-            for _ in 0..name_length {
+            let mut name = Vec::with_capacity((name_length - 1) as usize);
+            for _ in 0..name_length - 1 {
                 name.push(reader.read_i32::<LittleEndian>()? as u8 as char);
             }
+            // Null terminator
+            reader.read_i32::<LittleEndian>()?;
             let name = name.iter().collect::<String>();
             let format = reader.read_i32::<LittleEndian>()?;
             let filter = reader.read_i32::<LittleEndian>()?;
             let address = reader.read_i32::<LittleEndian>()?;
             let mask_name_length = reader.read_i32::<LittleEndian>()?;
-            let mut mask_name = Vec::with_capacity(mask_name_length as usize);
-            for _ in 0..mask_name_length {
-                mask_name.push(reader.read_i32::<LittleEndian>()? as u8 as char);
-            }
-            let mask_name = mask_name.into_iter().collect::<String>();
+            let mask_name = if mask_name_length > 0 {
+                let mut mask_name = Vec::with_capacity((mask_name_length - 1) as usize);
+
+                for _ in 0..mask_name_length - 1 {
+                    mask_name.push(reader.read_i32::<LittleEndian>()? as u8 as char);
+                }
+
+                // Null terminator
+                reader.read_i32::<LittleEndian>()?;
+
+                mask_name.into_iter().collect::<String>()
+            } else {
+                String::new()
+            };
             let border_colour = Rgba::decode_i32(reader)?;
             let hash = reader.read_u32::<LittleEndian>()?;
 
