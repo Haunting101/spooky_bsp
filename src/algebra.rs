@@ -1,7 +1,7 @@
 use crate::Decode;
 use std::io::Read;
 
-#[derive(Clone, Debug, Default, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
 pub struct Vector3 {
     pub x: f32,
     pub y: f32,
@@ -24,7 +24,7 @@ impl Decode for Vector3 {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
 pub struct Vector4 {
     pub x: f32,
     pub y: f32,
