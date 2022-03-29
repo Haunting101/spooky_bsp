@@ -1,5 +1,5 @@
 use byteorder::{LittleEndian, ReadBytesExt};
-use std::{io::Read, mem::MaybeUninit};
+use std::io::Read;
 
 pub trait Decode
 where
