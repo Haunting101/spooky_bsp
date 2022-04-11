@@ -10,7 +10,7 @@ array-init = "2.0.0"
 byteorder = "1.4.3"
 derive-new = "0.5.9"
 eyre = "0.6.8"
-flate2 = "1.0.22"
+flate2 = "1.0.23"
 num_enum = "0.5.7"
 
 [dev-dependencies]
