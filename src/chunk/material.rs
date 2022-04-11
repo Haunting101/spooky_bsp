@@ -1,48 +1,40 @@
+use derive_new::new;
 use std::io::Read;
 
-use crate::{Decode, Matrix, Rgba};
+use crate::{Decode, Matrix, Rgba, Str};
 
+#[derive(new)]
 pub struct Material {
     pub material_hash: u32,
     pub attributes: Attributes,
     pub textures: [MaterialTexture; 5],
 }
 
-impl Material {
-    pub fn new(material_hash: u32, attributes: Attributes, textures: [MaterialTexture; 5]) -> Self {
-        Self {
-            material_hash,
-            attributes,
-            textures,
-        }
-    }
-}
-
 impl Decode for Material {
-    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
-        let flags = u32::decode(reader)?;
-        let _name_hash = u32::decode(reader)?;
-        let additive_lighting_model = bool::decode(reader)?;
-        let colour = Rgba::<i32>::decode(reader)?;
-        let specular = Rgba::<i32>::decode(reader)?;
-        let power = f32::decode(reader)?;
-        let shading_mode = i32::decode(reader)?;
-        let blend = bool::decode(reader)?;
-        let blend_modes = BlendModes::decode(reader)?;
-        let alpha_test = bool::decode(reader)?;
-        let alpha_test_mode = AlphaTestMode::decode(reader)?;
-        let depth_buffer_write = bool::decode(reader)?;
-        let depth_buffer_comparison_mode = i32::decode(reader)?;
-        let material_hash = u32::decode(reader)?;
-        let owner = u32::decode(reader)?;
-        let colour_buffer_write = u32::decode(reader)?;
+    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+        let flags = u32::decode(reader, ())?;
+        let _name_hash = u32::decode(reader, ())?;
+        let additive_lighting_model = bool::decode(reader, ())?;
+        let colour = Rgba::<i32>::decode(reader, ())?;
+        let specular = Rgba::<i32>::decode(reader, ())?;
+        let power = f32::decode(reader, ())?;
+        let shading_mode = i32::decode(reader, ())?;
+        let blend = bool::decode(reader, ())?;
+        let blend_modes = BlendModes::decode(reader, ())?;
+        let alpha_test = bool::decode(reader, ())?;
+        let alpha_test_mode = AlphaTestMode::decode(reader, ())?;
+        let depth_buffer_write = bool::decode(reader, ())?;
+        let depth_buffer_comparison_mode = i32::decode(reader, ())?;
+        let material_hash = u32::decode(reader, ())?;
+        let owner = u32::decode(reader, ())?;
+        let colour_buffer_write = u32::decode(reader, ())?;
 
-        let textures = <[MaterialTexture; 5]>::decode(reader)?;
-        let matrices = <[Option<Matrix>; 5]>::decode(reader)?;
-        let generators = <[i32; 5]>::decode(reader)?;
+        let textures = <[MaterialTexture; 5]>::decode(reader, ())?;
+        let matrices = <[Option<Matrix>; 5]>::decode(reader, ())?;
+        let generators = <[i32; 5]>::decode(reader, ())?;
 
-        let envmap_type = i32::decode(reader)?;
-        let planar_sheer_envmap_distance = f32::decode(reader)?;
+        let envmap_type = i32::decode(reader, ())?;
+        let planar_sheer_envmap_distance = f32::decode(reader, ())?;
 
         let attributes = Attributes {
             flags,
@@ -68,7 +60,7 @@ impl Decode for Material {
     }
 }
 
-#[derive(Default)]
+#[derive(new, Default)]
 pub struct Attributes {
     pub flags: u32,
     pub additive_lighting_model: bool,
@@ -89,7 +81,7 @@ pub struct Attributes {
     pub planar_sheer_envmap_distance: f32,
 }
 
-#[derive(Default)]
+#[derive(new, Default)]
 pub struct MaterialTexture {
     pub uv_set: u32,
     pub name: String,
@@ -101,42 +93,18 @@ pub struct MaterialTexture {
     pub hash: u32,
 }
 
-impl MaterialTexture {
-    pub fn new(
-        uv_set: u32,
-        name: String,
-        format: i32,
-        filter: i32,
-        address: i32,
-        mask_name: String,
-        border_colour: Rgba<i32>,
-        hash: u32,
-    ) -> Self {
-        Self {
-            uv_set,
-            name,
-            format,
-            filter,
-            address,
-            mask_name,
-            border_colour,
-            hash,
-        }
-    }
-}
-
 impl Decode for MaterialTexture {
-    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
-        let uv_set = u32::decode(reader)?;
-        let name = String::decode(reader)?;
+    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+        let uv_set = u32::decode(reader, ())?;
+        let name = Str::<i32, true>::decode(reader, ())?;
 
         if name.len() > 0 {
-            let format = i32::decode(reader)?;
-            let filter = i32::decode(reader)?;
-            let address = i32::decode(reader)?;
-            let mask_name = String::decode(reader)?;
-            let border_colour = Rgba::<i32>::decode(reader)?;
-            let hash = u32::decode(reader)?;
+            let format = i32::decode(reader, ())?;
+            let filter = i32::decode(reader, ())?;
+            let address = i32::decode(reader, ())?;
+            let mask_name = Str::<i32, true>::decode(reader, ())?;
+            let border_colour = Rgba::<i32>::decode(reader, ())?;
+            let hash = u32::decode(reader, ())?;
 
             Ok(MaterialTexture::new(
                 uv_set,
@@ -170,47 +138,32 @@ impl Decode for MaterialTexture {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(new, Default, Debug)]
 pub struct BlendModes {
     pub source_mode: i32,
     pub destionation_mode: i32,
 }
 
-impl BlendModes {
-    pub fn new(source_mode: i32, destionation_mode: i32) -> Self {
-        Self {
-            source_mode,
-            destionation_mode,
-        }
-    }
-}
-
 impl Decode for BlendModes {
-    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
-        Ok(BlendModes::new(i32::decode(reader)?, i32::decode(reader)?))
+    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+        Ok(BlendModes::new(
+            i32::decode(reader, ())?,
+            i32::decode(reader, ())?,
+        ))
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(new, Default, Debug)]
 pub struct AlphaTestMode {
     pub comparision_function: i32,
     pub reference: f32,
 }
 
-impl AlphaTestMode {
-    pub fn new(comparision_function: i32, reference: f32) -> Self {
-        Self {
-            comparision_function,
-            reference,
-        }
-    }
-}
-
 impl Decode for AlphaTestMode {
-    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
+    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
         Ok(AlphaTestMode::new(
-            i32::decode(reader)?,
-            f32::decode(reader)?,
+            i32::decode(reader, ())?,
+            f32::decode(reader, ())?,
         ))
     }
 }

@@ -1,82 +1,132 @@
+mod animation_dictionary;
+mod animation_key;
+mod atomic_mesh;
+mod camera_projection;
+mod clips;
+mod clump;
+mod collision;
+mod entities;
+mod entity;
+mod frame;
+mod frame_child;
+mod light;
 mod material;
 mod mesh;
 mod model_part;
+mod navigation_mesh;
+mod ngon_list;
+mod null_box;
+mod nulls;
 mod occlusion;
 mod sector_octree;
+mod spline;
+mod switchable_lights;
 mod texture;
 mod world;
+mod zones;
 
+pub use animation_dictionary::*;
+pub use animation_key::*;
+pub use atomic_mesh::*;
+pub use camera_projection::*;
+pub use clips::*;
+pub use clump::*;
+pub use collision::*;
+pub use entities::*;
+pub use entity::*;
+pub use frame::*;
+pub use frame_child::*;
+pub use light::*;
 pub use material::*;
 pub use mesh::*;
 pub use model_part::*;
+pub use navigation_mesh::*;
+pub use ngon_list::*;
+pub use null_box::*;
+pub use nulls::*;
 pub use occlusion::*;
 pub use sector_octree::*;
+pub use spline::*;
+pub use switchable_lights::*;
 pub use texture::*;
 pub use world::*;
+pub use zones::*;
 
 use crate::Decode;
 use std::io::Read;
 
 use num_enum::TryFromPrimitive;
 
-#[derive(Debug, TryFromPrimitive)]
+#[derive(Debug, TryFromPrimitive, PartialEq, Eq)]
 #[repr(i32)]
-pub(crate) enum ChunkType {
-    Textures = 20002,
-    Materials = 1010,
+pub enum ChunkType {
+    GLProject = 1,
     MaterialObj = 5,
-    World = 1012,
-    AnimLib = 1017,
-    Entities = 20000,
-    Entity = 20001,
-    SpLights = 1029,
-    Zones = 1023,
-    NavigationMesh = 1021,
-    WpPoints = 1020,
-    SectorOctree = 1011,
-    Occlusion = 1019,
-    Area = 1024,
-    SkinObj = 1005,
-    BoneObj = 1001,
-    OcclusionMesh = 1018,
     ModelGroup = 1000,
+    BoneObj = 1001,
     SPMesh = 1002,
     Collision = 1003,
     AtomicMesh = 1004,
+    SkinObj = 1005,
     GLCamera = 1006,
-    GLProject = 1,
     LightObj = 1007,
-    LinkEmm = 1026,
     LevelObj = 1009,
+    Materials = 1010,
+    SectorOctree = 1011,
+    World = 1012,
+    AnimationKey = 1015,
+    AnimLib = 1017,
+    OcclusionMesh = 1018,
+    Occlusion = 1019,
+    WpPoints = 1020,
+    NavigationMesh = 1021,
+    Zones = 1023,
+    Area = 1024,
+    LinkEmm = 1026,
+    Animation = 1027,
+    SpLights = 1029,
+    Entities = 20000,
+    Entity = 20001,
+    Textures = 20002,
 }
 
 #[derive(Debug)]
-pub(crate) struct ChunkHeader {
+pub struct ChunkHeader {
     chunk_type: ChunkType,
     size: i32,
     version: i32,
 }
 
 impl ChunkHeader {
-    pub(crate) fn get_chunk_type(&self) -> &ChunkType {
+    pub fn get_chunk_type(&self) -> &ChunkType {
         &self.chunk_type
     }
 
-    pub(crate) fn get_size(&self) -> i32 {
+    pub fn get_size(&self) -> i32 {
         self.size
     }
 
-    pub(crate) fn get_version(&self) -> i32 {
+    pub fn get_version(&self) -> i32 {
         self.version
     }
 }
 
 impl Decode for ChunkHeader {
-    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
+    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+        let chunk_type = ChunkType::try_from(i32::decode(reader, ())?)?;
+        let size = {
+            let size = i32::decode(reader, ())?;
+
+            assert!(size >= 0);
+
+            size
+        };
+        let version = i32::decode(reader, ())?;
+
         Ok(ChunkHeader {
-            chunk_type: ChunkType::try_from(i32::decode(reader)?)?,
-            size: i32::decode(reader)?,
-            version: i32::decode(reader)?,
+            chunk_type,
+            size,
+            version,
         })
     }
 }

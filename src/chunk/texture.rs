@@ -1,7 +1,9 @@
+use derive_new::new;
 use std::io::Read;
 
-use crate::{Decode, Rgba};
+use crate::{Decode, Rgba, Str};
 
+#[derive(new)]
 pub struct Texture {
     name: String,
     mask_name: String,
@@ -15,30 +17,6 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn new(
-        name: String,
-        mask_name: String,
-        width: i32,
-        height: i32,
-        filter: i32,
-        address: i32,
-        format: i32,
-        border_color: Rgba<i32>,
-        pixels: Vec<Rgba<i32>>,
-    ) -> Self {
-        Self {
-            name,
-            mask_name,
-            width,
-            height,
-            filter,
-            address,
-            format,
-            border_color,
-            pixels,
-        }
-    }
-
     pub fn get_name(&self) -> &String {
         &self.name
     }
@@ -77,18 +55,18 @@ impl Texture {
 }
 
 impl Decode for Texture {
-    fn decode(reader: &mut impl Read) -> eyre::Result<Texture> {
-        let name = String::decode(reader)?;
-        let mask_name = String::decode(reader)?;
-        let width = i32::decode(reader)?;
-        let height = i32::decode(reader)?;
-        let filter = i32::decode(reader)?;
-        let address = i32::decode(reader)?;
-        let format = i32::decode(reader)?;
-        let border_color = Rgba::<i32>::decode(reader)?;
+    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Texture> {
+        let name = Str::<i32, true>::decode(reader, ())?;
+        let mask_name = Str::<i32, true>::decode(reader, ())?;
+        let width = i32::decode(reader, ())?;
+        let height = i32::decode(reader, ())?;
+        let filter = i32::decode(reader, ())?;
+        let address = i32::decode(reader, ())?;
+        let format = i32::decode(reader, ())?;
+        let border_color = Rgba::<i32>::decode(reader, ())?;
         let pixels = (0..width * height)
             .into_iter()
-            .map(|_| Rgba::decode(reader))
+            .map(|_| Rgba::decode(reader, ()))
             .collect::<Result<Vec<_>, _>>()?;
 
         Ok(Texture::new(

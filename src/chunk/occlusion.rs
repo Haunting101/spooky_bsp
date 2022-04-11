@@ -1,26 +1,23 @@
 use crate::{Decode, Plane};
+use derive_new::new;
 use std::io::Read;
 
+#[derive(new)]
 pub struct Occlusion {
     pub branches: Vec<OcclusionBranch>,
     pub leaves: Vec<OcclusionLeaf>,
-}
-
-impl Occlusion {
-    pub fn new(branches: Vec<OcclusionBranch>, leaves: Vec<OcclusionLeaf>) -> Self {
-        Self { branches, leaves }
-    }
+    pub has_occlusion_meshes: bool,
 }
 
 impl Decode for Occlusion {
-    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
-        let is_plane_bsp = bool::decode(reader)?;
-        let branches_count = u32::decode(reader)?;
+    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+        let is_plane_bsp = bool::decode(reader, ())?;
+        let branches_count = u32::decode(reader, ())?;
 
         let mut branches = Vec::with_capacity(branches_count as usize);
 
-        for branch_index in 0..branches_count {
-            let plane = Plane::decode(reader)?;
+        for _branch_index in 0..branches_count {
+            let plane = Plane::decode(reader, ())?;
 
             let negative_leaf;
             let negative;
@@ -28,17 +25,17 @@ impl Decode for Occlusion {
             let positive;
 
             if is_plane_bsp {
-                negative_leaf = u32::decode(reader)?;
+                negative_leaf = u32::decode(reader, ())?;
                 // TODO
                 negative = 0;
-                positive_leaf = u32::decode(reader)?;
+                positive_leaf = u32::decode(reader, ())?;
                 // TODO
                 positive = 0;
             } else {
-                negative_leaf = u32::decode(reader)?;
-                negative = u32::decode(reader)?; // 32 bit void*
-                positive_leaf = u32::decode(reader)?;
-                positive = u32::decode(reader)?; // 32 bit void*
+                negative_leaf = u32::decode(reader, ())?;
+                negative = u32::decode(reader, ())?; // 32 bit void*
+                positive_leaf = u32::decode(reader, ())?;
+                positive = u32::decode(reader, ())?; // 32 bit void*
             }
 
             branches.push(OcclusionBranch::new(
@@ -50,12 +47,14 @@ impl Decode for Occlusion {
             ));
         }
 
-        let leaves = Vec::decode(reader)?;
+        let leaves = Vec::decode(reader, ())?;
+        let has_occlusion_meshes = bool::decode(reader, ())?;
 
-        Ok(Occlusion::new(branches, leaves))
+        Ok(Occlusion::new(branches, leaves, has_occlusion_meshes))
     }
 }
 
+#[derive(new)]
 pub struct OcclusionBranch {
     pub plane: Plane,
     pub negative_leaf: u32,
@@ -64,43 +63,13 @@ pub struct OcclusionBranch {
     pub positive: u32,
 }
 
-impl OcclusionBranch {
-    pub fn new(
-        plane: Plane,
-        negative_leaf: u32,
-        negative: u32,
-        positive_leaf: u32,
-        positive: u32,
-    ) -> Self {
-        Self {
-            plane,
-            negative_leaf,
-            negative,
-            positive_leaf,
-            positive,
-        }
-    }
-}
-
+#[derive(new)]
 pub struct OcclusionLeaf {
     pub faces: u32,
-    pub have_occlusion_meshes: bool,
-}
-
-impl OcclusionLeaf {
-    pub fn new(faces: u32, have_occlusion_meshes: bool) -> Self {
-        Self {
-            faces,
-            have_occlusion_meshes,
-        }
-    }
 }
 
 impl Decode for OcclusionLeaf {
-    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
-        Ok(OcclusionLeaf::new(
-            u32::decode(reader)?,
-            bool::decode(reader)?,
-        ))
+    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+        Ok(OcclusionLeaf::new(u32::decode(reader, ())?))
     }
 }

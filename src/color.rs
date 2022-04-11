@@ -14,12 +14,12 @@ impl<T> Rgb<T> {
     }
 }
 
-impl<T: Decode> Decode for Rgb<T> {
-    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
+impl<T: Decode<Output = T>> Decode for Rgb<T> {
+    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
         Ok(Self::new(
-            T::decode(reader)?,
-            T::decode(reader)?,
-            T::decode(reader)?,
+            T::decode(reader, ())?,
+            T::decode(reader, ())?,
+            T::decode(reader, ())?,
         ))
     }
 }
@@ -38,13 +38,13 @@ impl<T> Rgba<T> {
     }
 }
 
-impl<T: Decode> Decode for Rgba<T> {
-    fn decode(reader: &mut impl Read) -> eyre::Result<Self> {
+impl<T: Decode<Output = T>> Decode for Rgba<T> {
+    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
         Ok(Self::new(
-            T::decode(reader)?,
-            T::decode(reader)?,
-            T::decode(reader)?,
-            T::decode(reader)?,
+            T::decode(reader, ())?,
+            T::decode(reader, ())?,
+            T::decode(reader, ())?,
+            T::decode(reader, ())?,
         ))
     }
 }
