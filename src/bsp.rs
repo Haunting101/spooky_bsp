@@ -74,7 +74,7 @@ impl Decode for Bsp {
         while let Ok(chunk_header) = ChunkHeader::decode(&mut decoder, ()) {
             let previous_position = decoder.position();
 
-            match dbg!(chunk_header.get_chunk_type()) {
+            match chunk_header.get_chunk_type() {
                 ChunkType::Textures => textures = Vec::decode(&mut decoder, ())?,
                 ChunkType::Materials => {
                     material_count = i32::decode(&mut decoder, ())?;
