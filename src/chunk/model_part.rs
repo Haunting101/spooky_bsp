@@ -34,6 +34,7 @@ pub struct ModelPart {
     pub flags: u32,
     pub lighting_sid: u32,
     pub vertices: Vec<Vertex>,
+    pub indices: Vec<Index>,
 }
 
 impl Decode for ModelPart {
@@ -92,6 +93,7 @@ impl Decode for ModelPart {
             flags,
             lighting_sid,
             vertices,
+            indices,
         ))
     }
 }
