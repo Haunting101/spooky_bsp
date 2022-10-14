@@ -57,6 +57,80 @@ use std::io::Read;
 
 use num_enum::TryFromPrimitive;
 
+pub enum Chunk {
+    GLProject(CameraProjection),
+    MaterialObj(Material),
+    ModelGroup(Mesh),
+    BoneObj(Frame),
+    SPMesh(ModelPart),
+    Collision(Collision),
+    AtomicMesh(AtomicMesh),
+    SkinObj(Clump),
+    GLCamera(CameraProjection),
+    LightObj(Light),
+    LevelObj(FrameChild),
+    Materials(i32),
+    SectorOctree(SectorOctree),
+    World(World),
+    AnimationKey(AnimationKey),
+    AnimLib(AnimationDictionary),
+    OcclusionMesh(NGonList),
+    Occlusion(Occlusion),
+    WpPoints(Nulls),
+    NavigationMesh(NavigationMesh),
+    Zones(Zones),
+    Area(Spline),
+    LinkEmm(NullBox),
+    Animation(Clips),
+    SpLights(SwitchableLights),
+    Entities(Entities),
+    Entity(Entity),
+    Textures(Vec<Texture>),
+}
+
+impl Decode<Option<&World>> for Chunk {
+    fn decode(reader: &mut impl Read, world: Option<&World>) -> eyre::Result<Self> {
+        let chunk_header = ChunkHeader::decode(reader, ())?;
+
+        Ok(match chunk_header.get_chunk_type() {
+            ChunkType::Textures => Chunk::Textures(Vec::decode(reader, ())?),
+            ChunkType::Materials => {
+                let material_count = i32::decode(reader, ())?;
+
+                assert!(material_count >= 0);
+
+                Chunk::Materials(material_count)
+            }
+            ChunkType::MaterialObj => Chunk::MaterialObj(Material::decode(reader, ())?),
+            ChunkType::World => Chunk::World(World::decode(reader, ())?),
+            ChunkType::ModelGroup => Chunk::ModelGroup(Mesh::decode(reader, ())?),
+            ChunkType::SPMesh => Chunk::SPMesh(ModelPart::decode(reader, ())?),
+            ChunkType::SectorOctree => Chunk::SectorOctree(SectorOctree::decode(reader, ())?),
+            ChunkType::Occlusion => Chunk::Occlusion(Occlusion::decode(reader, ())?),
+            ChunkType::LevelObj => Chunk::LevelObj(FrameChild::decode(reader, ())?),
+            ChunkType::LinkEmm => Chunk::LinkEmm(NullBox::decode(reader, ())?),
+            ChunkType::AtomicMesh => Chunk::AtomicMesh(AtomicMesh::decode(reader, ())?),
+            ChunkType::GLCamera => Chunk::GLCamera(CameraProjection::decode(reader, ())?),
+            ChunkType::GLProject => Chunk::GLProject(CameraProjection::decode(reader, ())?),
+            ChunkType::LightObj => Chunk::LightObj(Light::decode(reader, &chunk_header)?),
+            ChunkType::OcclusionMesh => Chunk::OcclusionMesh(NGonList::decode(reader, ())?),
+            ChunkType::Area => Chunk::Area(Spline::decode(reader, ())?),
+            ChunkType::BoneObj => Chunk::BoneObj(Frame::decode(reader, ())?),
+            ChunkType::WpPoints => Chunk::WpPoints(Nulls::decode(reader, ())?),
+            ChunkType::Entities => Chunk::Entities(Entities::decode(reader, ())?),
+            ChunkType::Entity => Chunk::Entity(Entity::decode(reader, ())?),
+            ChunkType::SkinObj => Chunk::SkinObj(Clump::decode(reader, ())?),
+            ChunkType::AnimLib => Chunk::AnimLib(AnimationDictionary::decode(reader, ())?),
+            ChunkType::Animation => Chunk::Animation(Clips::decode(reader, ())?),
+            ChunkType::AnimationKey => Chunk::AnimationKey(AnimationKey::decode(reader, ())?),
+            ChunkType::Zones => Chunk::Zones(Zones::decode(reader, (&chunk_header, world.unwrap()))?),
+            ChunkType::SpLights => Chunk::SpLights(SwitchableLights::decode(reader, ())?),
+            ChunkType::Collision => Chunk::Collision(Collision::decode(reader, ())?),
+            ChunkType::NavigationMesh => Chunk::NavigationMesh(NavigationMesh::decode(reader, ())?),
+        })
+    }
+}
+
 #[derive(Debug, TryFromPrimitive, PartialEq, Eq)]
 #[repr(i32)]
 pub enum ChunkType {

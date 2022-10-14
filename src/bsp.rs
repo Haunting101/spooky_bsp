@@ -1,194 +1,37 @@
-use crate::{
-    AnimationDictionary, AnimationKey, AtomicMesh, CameraProjection, ChunkHeader, ChunkType, Clips,
-    Clump, Collision, Decode, Entities, Entity, Frame, FrameChild, Light, Material, Mesh,
-    ModelPart, NGonList, NavigationMesh, NullBox, Nulls, Occlusion, PositionTracker, SectorOctree,
-    Spline, SwitchableLights, Texture, World, Zones,
-};
+use crate::{Chunk, Decode, PositionTracker};
 use derive_new::new;
 use flate2::read::GzDecoder;
 use std::io::Read;
 
 #[derive(new)]
 pub struct Bsp {
-    pub textures: Vec<Texture>,
-    pub materials: Vec<Material>,
-    pub world: Option<World>,
-    pub meshes: Vec<Mesh>,
-    pub model_parts: Vec<ModelPart>,
-    pub octree_sectors: Vec<SectorOctree>,
-    pub occlusions: Vec<Occlusion>,
-    pub frame_children: Vec<FrameChild>,
-    pub null_boxes: Vec<NullBox>,
-    pub atomic_meshes: Vec<AtomicMesh>,
-    pub camera_projections: Vec<CameraProjection>,
-    pub lights: Vec<Light>,
-    pub ngon_lists: Vec<NGonList>,
-    pub splines: Vec<Spline>,
-    pub frames: Vec<Frame>,
-    pub nullss: Vec<Nulls>,
-    pub entitiess: Vec<Entities>,
-    pub entities: Vec<Entity>,
-    pub clumps: Vec<Clump>,
-    pub animation_dictionaries: Vec<AnimationDictionary>,
-    pub clips: Vec<Clips>,
-    pub animation_keys: Vec<AnimationKey>,
-    pub zones: Vec<Zones>,
-    pub switchable_lights: Vec<SwitchableLights>,
-    pub collisions: Vec<Collision>,
-    pub navigation_meshes: Vec<NavigationMesh>,
+    pub chunks: Vec<Chunk>,
 }
 
 impl Decode for Bsp {
     fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
         let mut decoder = PositionTracker::new(GzDecoder::new(reader));
+        let mut chunks = Vec::new();
 
-        let mut textures = Vec::new();
-        let mut materials = Vec::new();
-        let mut world = None;
-        let mut meshes = Vec::new();
-        let mut model_parts = Vec::new();
-        let mut octree_sectors = Vec::new();
-        let mut occlusions = Vec::new();
-        let mut frame_children = Vec::new();
-        let mut null_boxes = Vec::new();
-        let mut atomic_meshes = Vec::new();
-        let mut camera_projections = Vec::new();
-        let mut lights = Vec::new();
-        let mut ngon_lists = Vec::new();
-        let mut splines = Vec::new();
-        let mut frames = Vec::new();
-        let mut nullss = Vec::new();
-        let mut entitiess = Vec::new();
-        let mut entities = Vec::new();
-        let mut clumps = Vec::new();
-        let mut animation_dictionaries = Vec::new();
-        let mut clips = Vec::new();
-        let mut animation_keys = Vec::new();
-        let mut zones = Vec::new();
-        let mut switchable_lights = Vec::new();
-        let mut collisions = Vec::new();
-        let mut navigation_meshes = Vec::new();
+        let mut latest_world = None;
 
-        let mut material_count = 0;
+        loop {
+            match Chunk::decode(&mut decoder, latest_world.as_ref()) {
+                Ok(chunk) => {
+                    match chunk {
+                        Chunk::World(ref current_world) => {
+                            latest_world = Some(current_world.clone());
+                        },
+                        _ => (),
+                    }
 
-        while let Ok(chunk_header) = ChunkHeader::decode(&mut decoder, ()) {
-            let previous_position = decoder.position();
-
-            match chunk_header.get_chunk_type() {
-                ChunkType::Textures => textures = Vec::decode(&mut decoder, ())?,
-                ChunkType::Materials => {
-                    material_count = i32::decode(&mut decoder, ())?;
-
-                    assert!(material_count >= 0);
-                }
-                ChunkType::MaterialObj => materials.push(Material::decode(&mut decoder, ())?),
-                ChunkType::World => {
-                    world = Some(World::decode(&mut decoder, ())?);
-                }
-                ChunkType::ModelGroup => meshes.push(Mesh::decode(&mut decoder, ())?),
-                ChunkType::SPMesh => model_parts.push(ModelPart::decode(&mut decoder, ())?),
-                ChunkType::SectorOctree => {
-                    octree_sectors.push(SectorOctree::decode(&mut decoder, ())?)
-                }
-                ChunkType::Occlusion => occlusions.push(Occlusion::decode(&mut decoder, ())?),
-                ChunkType::LevelObj => {
-                    frame_children.push(FrameChild::decode(&mut decoder, ())?);
-                }
-                ChunkType::LinkEmm => {
-                    null_boxes.push(NullBox::decode(&mut decoder, ())?);
-                }
-                ChunkType::AtomicMesh => {
-                    atomic_meshes.push(AtomicMesh::decode(&mut decoder, ())?);
-                }
-                ChunkType::GLCamera => {
-                    camera_projections.push(CameraProjection::decode(&mut decoder, ())?);
-                }
-                ChunkType::GLProject => {
-                    camera_projections.push(CameraProjection::decode(&mut decoder, ())?);
-                }
-                ChunkType::LightObj => {
-                    lights.push(Light::decode(&mut decoder, &chunk_header)?);
-                }
-                ChunkType::OcclusionMesh => {
-                    ngon_lists.push(NGonList::decode(&mut decoder, ())?);
-                }
-                ChunkType::Area => {
-                    splines.push(Spline::decode(&mut decoder, ())?);
-                }
-                ChunkType::BoneObj => {
-                    frames.push(Frame::decode(&mut decoder, ())?);
-                }
-                ChunkType::WpPoints => {
-                    nullss.push(Nulls::decode(&mut decoder, ())?);
-                }
-                ChunkType::Entities => {
-                    entitiess.push(Entities::decode(&mut decoder, ())?);
-                }
-                ChunkType::Entity => {
-                    entities.push(Entity::decode(&mut decoder, ())?);
-                }
-                ChunkType::SkinObj => {
-                    clumps.push(Clump::decode(&mut decoder, ())?);
-                }
-                ChunkType::AnimLib => {
-                    animation_dictionaries.push(AnimationDictionary::decode(&mut decoder, ())?);
-                }
-                ChunkType::Animation => {
-                    clips.push(Clips::decode(&mut decoder, ())?);
-                }
-                ChunkType::AnimationKey => {
-                    animation_keys.push(AnimationKey::decode(&mut decoder, ())?);
-                }
-                ChunkType::Zones => {
-                    zones.push(Zones::decode(&mut decoder, (&chunk_header, world.as_ref().unwrap()))?);
-                }
-                ChunkType::SpLights => {
-                    switchable_lights.push(SwitchableLights::decode(&mut decoder, ())?);
-                }
-                ChunkType::Collision => {
-                    collisions.push(Collision::decode(&mut decoder, ())?);
-                }
-                ChunkType::NavigationMesh => {
-                    navigation_meshes.push(NavigationMesh::decode(&mut decoder, ())?);
-                }
+                    chunks.push(chunk);
+                },
+                Err(_) => break,
             }
-
-            let current_position = decoder.position();
-            let read_bytes = current_position - previous_position;
-
-            assert_eq!(read_bytes, chunk_header.get_size() as usize);
         }
 
-        assert!(material_count as usize == materials.len());
-
-        Ok(Bsp::new(
-            textures,
-            materials,
-            world,
-            meshes,
-            model_parts,
-            octree_sectors,
-            occlusions,
-            frame_children,
-            null_boxes,
-            atomic_meshes,
-            camera_projections,
-            lights,
-            ngon_lists,
-            splines,
-            frames,
-            nullss,
-            entitiess,
-            entities,
-            clumps,
-            animation_dictionaries,
-            clips,
-            animation_keys,
-            zones,
-            switchable_lights,
-            collisions,
-            navigation_meshes,
-        ))
+        Ok(Bsp::new(chunks))
     }
 }
 
