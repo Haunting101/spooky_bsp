@@ -11,7 +11,7 @@ const HAS_WEIGHT: u32 = 1 << 12;
 const HAS_INDICES: u32 = 1 << 13;
 const UV_COUNT_MASK: u32 = 0xFF;
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct ModelPart {
     pub read_access_flags: u32,
     pub vertex_read_flags: u32,
@@ -98,7 +98,7 @@ impl Decode for ModelPart {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Vertex {
     pub vertex: Option<Vector3>,
     pub normal: Option<Vector3>,
@@ -181,7 +181,7 @@ impl Decode<u32> for Vertex {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Index {
     pub index0: u32,
     pub index1: u32,

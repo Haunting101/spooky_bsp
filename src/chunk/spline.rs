@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{Decode, Vector3};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Spline {
     pub points: Vec<Vector3>,
     pub closed: bool,

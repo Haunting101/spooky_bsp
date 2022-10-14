@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{Decode, Matrix, Str};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Entity {
     pub entity_type: u32,
     pub matrix: Matrix,

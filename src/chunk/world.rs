@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{BoundingBox, Decode, Rgb, Rgba};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct World {
     pub flags: u32,
     pub ambient: Rgba<u8>,
@@ -39,7 +39,7 @@ impl Decode for World {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Floor {
     pub occlusion_bsp: u32,
     pub ghost_camera: BoundingBox,

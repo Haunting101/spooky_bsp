@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{Decode, Rgba, Str};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Texture {
     name: String,
     mask_name: String,

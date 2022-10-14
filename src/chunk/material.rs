@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{Decode, Matrix, Rgba, Str};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Material {
     pub material_hash: u32,
     pub attributes: Attributes,
@@ -60,7 +60,7 @@ impl Decode for Material {
     }
 }
 
-#[derive(new, Default)]
+#[derive(new, Clone, Debug, Default)]
 pub struct Attributes {
     pub flags: u32,
     pub additive_lighting_model: bool,
@@ -81,7 +81,7 @@ pub struct Attributes {
     pub planar_sheer_envmap_distance: f32,
 }
 
-#[derive(new, Default)]
+#[derive(new, Clone, Debug, Default)]
 pub struct MaterialTexture {
     pub uv_set: u32,
     pub name: String,
@@ -138,7 +138,7 @@ impl Decode for MaterialTexture {
     }
 }
 
-#[derive(new, Default, Debug)]
+#[derive(new, Clone, Debug, Default)]
 pub struct BlendModes {
     pub source_mode: i32,
     pub destionation_mode: i32,
@@ -153,7 +153,7 @@ impl Decode for BlendModes {
     }
 }
 
-#[derive(new, Default, Debug)]
+#[derive(new, Clone, Debug, Default)]
 pub struct AlphaTestMode {
     pub comparision_function: i32,
     pub reference: f32,

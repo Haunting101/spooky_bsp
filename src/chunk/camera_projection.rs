@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{Decode, Rectangle};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct CameraProjection {
     pub type_: i32,
     pub near_z: f32,

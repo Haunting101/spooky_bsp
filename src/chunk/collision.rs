@@ -3,7 +3,7 @@ use crate::{Decode, QuantizedPlane};
 use derive_new::new;
 use std::io::Read;
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Collision {
     pub faces: Vec<Leaf>,
     pub leaves: Vec<u32>,
@@ -33,7 +33,7 @@ impl Decode for Collision {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Leaf {
     pub plane: QuantizedPlane,
     pub material_block_index: u16,
@@ -50,7 +50,7 @@ impl Decode for Leaf {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Branch {
     pub plane: QuantizedPlane,
     pub index: u32,

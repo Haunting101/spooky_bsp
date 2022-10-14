@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{Decode, Str};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Clips {
     pub name_hash: u32,
     pub minimum_time: f32,
@@ -38,7 +38,7 @@ impl Decode for Clips {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Scaffold {
     pub hash1: u32,
     pub hash2: u32,

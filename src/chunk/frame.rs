@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{Decode, Matrix, Str};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Frame {
     pub local_transform_matrix: Matrix,
     pub global_transform_matrix: Matrix,

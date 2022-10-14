@@ -50,7 +50,7 @@ impl From<(Vector3, f32)> for Vector4 {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct QuantizedQuaternion<T: Decode<Output = T>> {
     pub x: T,
     pub y: T,

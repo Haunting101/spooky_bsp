@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{BoundingBox, Decode, Vector3};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Mesh {
     pub flags: u32,
     pub material_blocks_count: u16,

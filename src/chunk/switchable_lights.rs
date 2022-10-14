@@ -6,6 +6,7 @@ use std::io::Read;
 const STORE_LAYER_REMAP_COUNT: u32 = 3;
 const UPDATE_SUBRECTS_COUNT: u32 = 2;
 
+#[derive(Clone, Debug)]
 pub struct SwitchableLights {}
 
 impl Decode for SwitchableLights {
@@ -48,6 +49,7 @@ impl Decode for SwitchableLights {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct SwitchableLightMap {}
 
 impl SwitchableLightMap {}
@@ -76,6 +78,7 @@ impl Decode<u32> for SwitchableLightMap {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct LightMapUpdateBlock {}
 
 impl Decode<i32> for LightMapUpdateBlock {
@@ -99,7 +102,7 @@ impl Decode<i32> for LightMapUpdateBlock {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct SwitchableLightData {
     pub dependent_light_maps: Vec<u32>,
     pub vertex_blocks: Vec<SingleVertexSwitchBlock>,
@@ -126,7 +129,7 @@ impl Decode for SwitchableLightData {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct SingleVertexSwitchBlock {
     pub material_block_index: u32,
     pub updates: Vec<UpdateRGBA>,
@@ -145,7 +148,7 @@ impl Decode for SingleVertexSwitchBlock {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct UpdateRGBA {
     pub vertex_index: u32,
     pub color: Rgba<u8>,
@@ -160,7 +163,7 @@ impl Decode for UpdateRGBA {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct MaterialBlockSwitchInfo {
     pub lighting_id: u32,
     pub is_world_geometry: bool,
@@ -177,7 +180,7 @@ impl Decode for MaterialBlockSwitchInfo {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct NonSatRGB {
     pub r: u16,
     pub g: u16,

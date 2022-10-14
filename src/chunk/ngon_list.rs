@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{Decode, Plane, Vector3};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct NGonList {
     pub vertices: Vec<NGonVertex>,
     pub faces: Vec<NGonFace>,
@@ -26,7 +26,7 @@ impl Decode for NGonList {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct NGonVertex {
     pub vector: Vector3,
     pub edge_plane: Plane,
@@ -41,7 +41,7 @@ impl Decode for NGonVertex {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct NGonFace {
     pub face_plane: Plane,
     pub vertex_index: u32,

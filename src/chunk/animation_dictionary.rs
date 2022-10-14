@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{Decode, QuantizedQuaternion, Vector3};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct AnimationDictionary {
     pub base_poses: Vec<BasePose>,
     pub clip_count: i32,
@@ -21,7 +21,7 @@ impl Decode for AnimationDictionary {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct BasePose {
     pub rotation: QuantizedQuaternion<i16>,
     pub position: Vector3,

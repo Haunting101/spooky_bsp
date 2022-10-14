@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{Decode, OrientedBoundingBox};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct NullBox {
     pub base_flags: u32,
     pub null_index: u32,

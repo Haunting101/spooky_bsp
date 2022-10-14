@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{BoundingBox, Decode};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct SectorOctree {
     pub blocks: Vec<SectorOctreeBlock>,
     pub leaves: Vec<SectorOctreeLeaf>,
@@ -20,7 +20,7 @@ impl Decode for SectorOctree {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct SectorOctreeBlock {
     pub material_block_index: u32,
 }
@@ -33,7 +33,7 @@ impl Decode for SectorOctreeBlock {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct SectorOctreeLeaf {
     pub sector_floor_flag: u32,
     pub world_blocks_count: i32,
@@ -66,6 +66,7 @@ impl Decode for SectorOctreeLeaf {
     }
 }
 
+#[derive(Clone, Debug)]
 pub enum SectorOctreeOctant {
     Leaf {
         bounds: BoundingBox,

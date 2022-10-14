@@ -2,7 +2,7 @@ use crate::{Decode, Plane};
 use derive_new::new;
 use std::io::Read;
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Occlusion {
     pub branches: Vec<OcclusionBranch>,
     pub leaves: Vec<OcclusionLeaf>,
@@ -54,7 +54,7 @@ impl Decode for Occlusion {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct OcclusionBranch {
     pub plane: Plane,
     pub negative_leaf: u32,
@@ -63,7 +63,7 @@ pub struct OcclusionBranch {
     pub positive: u32,
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct OcclusionLeaf {
     pub faces: u32,
 }

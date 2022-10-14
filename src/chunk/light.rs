@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{ChunkHeader, Decode, Rgba};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Light {
     pub base_flags: u32,
     pub light_type: i32,

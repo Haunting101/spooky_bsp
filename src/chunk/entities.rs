@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::Decode;
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Entities {
     pub count: u32,
 }

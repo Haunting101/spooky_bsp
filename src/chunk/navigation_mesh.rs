@@ -3,7 +3,7 @@ use crate::{Decode, Vector3};
 use derive_new::new;
 use std::io::Read;
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct NavigationMesh {
     pub waypoints: Vec<Waypoint>,
     pub links: Vec<Link>,
@@ -32,7 +32,7 @@ impl Decode for NavigationMesh {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Waypoint {
     pub position: Vector3,
     pub flags: u32,
@@ -47,6 +47,7 @@ impl Decode for Waypoint {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Link {}
 
 impl Decode for Link {

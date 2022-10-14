@@ -4,7 +4,7 @@ use std::io::Read;
 
 pub type Nulls = Vec<Null>;
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Null {
     pub matrix: Matrix,
     pub bounding_box: BoundingBox,

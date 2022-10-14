@@ -3,7 +3,7 @@ use std::io::Read;
 
 use crate::{BoundingBox, Decode, Matrix, Vector3};
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Clump {
     pub base_flags: u32,
     pub name_hash: u32,
@@ -48,7 +48,7 @@ impl Decode for Clump {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 struct Plane {
     pub normal: Vector3,
     pub point_on_plane: Vector3,

@@ -1,15 +1,11 @@
 use crate::{Decode, Vector3};
+use derive_new::new;
 use std::io::Read;
 
+#[derive(new, Clone, Debug)]
 pub struct BoundingBox {
     pub supremum: Vector3,
     pub infimum: Vector3,
-}
-
-impl BoundingBox {
-    pub fn new(supremum: Vector3, infimum: Vector3) -> Self {
-        Self { supremum, infimum }
-    }
 }
 
 impl Decode for BoundingBox {
@@ -21,20 +17,11 @@ impl Decode for BoundingBox {
     }
 }
 
+#[derive(new, Clone, Debug)]
 pub struct OrientedBoundingBox {
     pub center: Vector3,
     pub axes: [Vector3; 3],
     pub extents: [f32; 3],
-}
-
-impl OrientedBoundingBox {
-    pub fn new(center: Vector3, axes: [Vector3; 3], extents: [f32; 3]) -> Self {
-        Self {
-            center,
-            axes,
-            extents,
-        }
-    }
 }
 
 impl Decode for OrientedBoundingBox {

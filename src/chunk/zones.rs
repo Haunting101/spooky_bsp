@@ -3,7 +3,7 @@ use crate::{BoundingBox, ChunkHeader, Decode, World};
 use derive_new::new;
 use std::io::Read;
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Zones {
     pub octant_connections: Vec<u32>,
     pub zones: Vec<Zone>,
@@ -28,7 +28,7 @@ impl Decode<(&ChunkHeader, &World)> for Zones {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Zone {
     pub bounding_box: BoundingBox,
     pub hash: u32,

@@ -4,7 +4,7 @@ use derive_new::new;
 use num_enum::TryFromPrimitive;
 use std::io::Read;
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct AnimationKey {
     pub type_: i32,
     pub target_hash: u32,
@@ -122,7 +122,7 @@ impl Decode for AnimationKey {
     }
 }
 
-#[derive(Debug, TryFromPrimitive, PartialEq, Eq)]
+#[derive(Clone, Debug, TryFromPrimitive, PartialEq, Eq)]
 #[repr(i32)]
 pub enum Interpolation {
     Linear = 0,
@@ -135,7 +135,7 @@ impl Decode for Interpolation {
     }
 }
 
-#[derive(Debug, TryFromPrimitive, PartialEq, Eq)]
+#[derive(Clone, Debug, TryFromPrimitive, PartialEq, Eq)]
 #[repr(i32)]
 pub enum AnimationKeyType {
     Rotate = 0,
@@ -145,6 +145,7 @@ pub enum AnimationKeyType {
     VisibilityState = 4,
 }
 
+#[derive(Clone, Debug)]
 pub enum AnimationKeys {
     Rotations(Vec<QuantizedQuaternion<i32>>),
     Translations(Vec<Vector3>),
@@ -153,6 +154,7 @@ pub enum AnimationKeys {
     VisibilityStates(Vec<VisibilityState>),
 }
 
+#[derive(Clone, Debug)]
 pub struct Shape {}
 
 impl Decode for Shape {
@@ -203,13 +205,13 @@ impl Decode for Shape {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct Uv {
     pub u: u16,
     pub v: u16,
 }
 
-#[derive(Debug, TryFromPrimitive, PartialEq, Eq)]
+#[derive(Clone, Debug, TryFromPrimitive, PartialEq, Eq)]
 #[repr(u8)]
 pub enum VisibilityState {
     Off = 0,
@@ -222,7 +224,7 @@ impl Decode for VisibilityState {
     }
 }
 
-#[derive(new)]
+#[derive(new, Clone, Debug)]
 pub struct AdaptiveDifferentialPulseCodeModulation {
     pub vertex_type: AdaptiveDifferentialPulseCodeModulationType,
     pub normal_type: AdaptiveDifferentialPulseCodeModulationType,
@@ -241,7 +243,7 @@ impl Decode for AdaptiveDifferentialPulseCodeModulation {
     }
 }
 
-#[derive(Debug, TryFromPrimitive, PartialEq, Eq)]
+#[derive(Clone, Debug, TryFromPrimitive, PartialEq, Eq)]
 #[repr(i32)]
 pub enum AdaptiveDifferentialPulseCodeModulationType {
     None = 0,
