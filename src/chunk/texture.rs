@@ -5,53 +5,15 @@ use crate::{Decode, Rgba, Str};
 
 #[derive(new, Clone, Debug)]
 pub struct Texture {
-    name: String,
-    mask_name: String,
-    width: i32,
-    height: i32,
-    filter: i32,
-    address: i32,
-    format: i32,
-    border_color: Rgba<i32>,
-    pixels: Vec<Rgba<i32>>,
-}
-
-impl Texture {
-    pub fn get_name(&self) -> &String {
-        &self.name
-    }
-
-    pub fn get_mask_name(&self) -> &String {
-        &self.mask_name
-    }
-
-    pub fn get_width(&self) -> i32 {
-        self.width
-    }
-
-    pub fn get_height(&self) -> i32 {
-        self.height
-    }
-
-    pub fn get_filter(&self) -> i32 {
-        self.filter
-    }
-
-    pub fn get_address(&self) -> i32 {
-        self.address
-    }
-
-    pub fn get_format(&self) -> i32 {
-        self.format
-    }
-
-    pub fn get_border_color(&self) -> &Rgba<i32> {
-        &self.border_color
-    }
-
-    pub fn get_pixels(&self) -> &Vec<Rgba<i32>> {
-        &self.pixels
-    }
+    pub name: String,
+    pub mask_name: String,
+    pub width: i32,
+    pub height: i32,
+    pub filter: i32,
+    pub address: i32,
+    pub format: i32,
+    pub border_color: Rgba<i32>,
+    pub pixels: Vec<Rgba<i32>>,
 }
 
 impl Decode for Texture {
