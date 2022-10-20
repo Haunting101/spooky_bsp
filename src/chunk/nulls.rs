@@ -1,4 +1,4 @@
-use crate::{BoundingBox, Decode, Matrix, Str};
+use crate::{BoundingBox, Decode, Matrix};
 use derive_new::new;
 use std::io::Read;
 
@@ -23,7 +23,7 @@ impl Decode for Null {
         let floor_flags = u32::decode(reader, ())?;
         let flags = u32::decode(reader, ())?;
         let spawn_type = u32::decode(reader, ())?;
-        let name = Str::<u8>::decode(reader, ())?;
+        let name = String::decode(reader, ())?;
 
         Ok(Self::new(
             matrix,

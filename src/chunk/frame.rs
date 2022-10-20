@@ -1,7 +1,7 @@
 use derive_new::new;
 use std::io::Read;
 
-use crate::{Decode, Matrix, Str};
+use crate::{Decode, Matrix};
 
 #[derive(new, Clone, Debug)]
 pub struct Frame {
@@ -20,7 +20,7 @@ impl Decode for Frame {
         let bone_index = i32::decode(reader, ())?;
         let flags = u32::decode(reader, ())?;
         let id = u32::decode(reader, ())?;
-        let name = Str::<u8>::decode(reader, ())?;
+        let name = String::decode(reader, ())?;
 
         Ok(Self::new(
             local_transform_matrix,

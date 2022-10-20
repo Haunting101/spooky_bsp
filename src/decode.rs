@@ -1,5 +1,8 @@
 use byteorder::{LittleEndian, ReadBytesExt};
-use std::io::Read;
+use std::{io::Read, marker::PhantomData};
+
+pub struct I32Encoded<T>(PhantomData<T>);
+pub struct NullTerminated<T>(PhantomData<T>);
 
 pub trait Decode<S = ()>
 where
@@ -79,6 +82,42 @@ impl Decode for f32 {
 impl Decode for f64 {
     fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
         Ok(reader.read_f64::<LittleEndian>()?)
+    }
+}
+
+impl Decode for String {
+    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+        let length = i32::decode(reader, ())?;
+
+        assert!(length >= 0);
+
+        Ok((0..length)
+            .into_iter()
+            .map(|_| Ok(u8::decode(reader, ())? as char))
+            .collect::<eyre::Result<String>>()?)
+    }
+}
+
+impl Decode for NullTerminated<I32Encoded<String>> {
+    type Output = String;
+
+    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self::Output> {
+        let length = i32::decode(reader, ())?;
+
+        assert!(length >= 0);
+
+        let string = (0..length - 1)
+            .into_iter()
+            .map(|_| Ok(i32::decode(reader, ())? as u8 as char))
+            .collect::<eyre::Result<String>>()?;
+
+        if length > 0 {
+            let terminator = i32::decode(reader, ())?;
+
+            assert_eq!(terminator, 0);
+        }
+
+        Ok(string)
     }
 }
 

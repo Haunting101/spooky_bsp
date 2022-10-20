@@ -8,7 +8,6 @@ mod bsp;
 mod chunk;
 mod color;
 mod decode;
-mod string;
 
 pub use algebra::*;
 pub use bounding_box::*;
@@ -16,7 +15,6 @@ pub use bsp::*;
 pub use chunk::*;
 pub use color::*;
 pub use decode::*;
-pub use string::*;
 
 use std::io::{self, Read};
 

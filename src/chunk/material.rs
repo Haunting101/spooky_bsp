@@ -1,7 +1,7 @@
 use derive_new::new;
 use std::io::Read;
 
-use crate::{Decode, Matrix, Rgba, Str};
+use crate::{Decode, I32Encoded, Matrix, NullTerminated, Rgba};
 
 #[derive(new, Clone, Debug)]
 pub struct Material {
@@ -96,13 +96,13 @@ pub struct MaterialTexture {
 impl Decode for MaterialTexture {
     fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
         let uv_set = u32::decode(reader, ())?;
-        let name = Str::<i32, true>::decode(reader, ())?;
+        let name = NullTerminated::<I32Encoded<String>>::decode(reader, ())?;
 
         if name.len() > 0 {
             let format = i32::decode(reader, ())?;
             let filter = i32::decode(reader, ())?;
             let address = i32::decode(reader, ())?;
-            let mask_name = Str::<i32, true>::decode(reader, ())?;
+            let mask_name = NullTerminated::<I32Encoded<String>>::decode(reader, ())?;
             let border_colour = Rgba::<i32>::decode(reader, ())?;
             let hash = u32::decode(reader, ())?;
 

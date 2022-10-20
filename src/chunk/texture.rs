@@ -1,7 +1,7 @@
 use derive_new::new;
 use std::io::Read;
 
-use crate::{Decode, Rgba, Str};
+use crate::{Decode, I32Encoded, NullTerminated, Rgba};
 
 #[derive(new, Clone, Debug)]
 pub struct Texture {
@@ -18,8 +18,8 @@ pub struct Texture {
 
 impl Decode for Texture {
     fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Texture> {
-        let name = Str::<i32, true>::decode(reader, ())?;
-        let mask_name = Str::<i32, true>::decode(reader, ())?;
+        let name = NullTerminated::<I32Encoded<String>>::decode(reader, ())?;
+        let mask_name = NullTerminated::<I32Encoded<String>>::decode(reader, ())?;
         let width = i32::decode(reader, ())?;
         let height = i32::decode(reader, ())?;
         let filter = i32::decode(reader, ())?;

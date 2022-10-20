@@ -1,7 +1,7 @@
 use derive_new::new;
 use std::io::Read;
 
-use crate::{Decode, Matrix, Str};
+use crate::{Decode, Matrix};
 
 #[derive(new, Clone, Debug)]
 pub struct Entity {
@@ -16,7 +16,7 @@ impl Decode for Entity {
         let entity_type = u32::decode(reader, ())?;
         let matrix = Matrix::decode(reader, ())?;
         let action_points_count = i32::decode(reader, ())?;
-        let category_name = Str::<u8>::decode(reader, ())?;
+        let category_name = String::decode(reader, ())?;
 
         assert!(category_name.len() <= 50);
 

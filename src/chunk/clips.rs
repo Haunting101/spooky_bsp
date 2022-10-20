@@ -1,7 +1,7 @@
 use derive_new::new;
 use std::io::Read;
 
-use crate::{Decode, Str};
+use crate::Decode;
 
 #[derive(new, Clone, Debug)]
 pub struct Clips {
@@ -23,7 +23,7 @@ impl Decode for Clips {
             .map(|_| Scaffold::decode(reader, ()))
             .collect::<Result<Vec<_>, _>>()?;
         let sequence_count = i32::decode(reader, ())?;
-        let name = Str::<u8>::decode(reader, ())?;
+        let name = String::decode(reader, ())?;
 
         assert!(name.len() <= 32);
 
