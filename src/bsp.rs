@@ -21,12 +21,12 @@ impl Decode for Bsp {
                     match chunk {
                         Chunk::World(ref current_world) => {
                             latest_world = Some(current_world.clone());
-                        },
+                        }
                         _ => (),
                     }
 
                     chunks.push(chunk);
-                },
+                }
                 Err(_) => break,
             }
         }

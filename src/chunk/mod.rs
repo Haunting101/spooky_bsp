@@ -123,7 +123,9 @@ impl Decode<Option<&World>> for Chunk {
             ChunkType::AnimLib => Chunk::AnimLib(AnimationDictionary::decode(reader, ())?),
             ChunkType::Animation => Chunk::Animation(Clips::decode(reader, ())?),
             ChunkType::AnimationKey => Chunk::AnimationKey(AnimationKey::decode(reader, ())?),
-            ChunkType::Zones => Chunk::Zones(Zones::decode(reader, (&chunk_header, world.unwrap()))?),
+            ChunkType::Zones => {
+                Chunk::Zones(Zones::decode(reader, (&chunk_header, world.unwrap()))?)
+            }
             ChunkType::SpLights => Chunk::SpLights(SwitchableLights::decode(reader, ())?),
             ChunkType::Collision => Chunk::Collision(Collision::decode(reader, ())?),
             ChunkType::NavigationMesh => Chunk::NavigationMesh(NavigationMesh::decode(reader, ())?),
