@@ -43,8 +43,6 @@ mod tests {
         use std::fs::File;
         use test_case::test_case;
 
-        use super::*;
-
         #[test_case("aether.bsp" ; "aether")]
         #[test_case("arclight.bsp" ; "arclight")]
         #[test_case("azrael.bsp" ; "azrael")]
@@ -100,11 +98,10 @@ mod tests {
         }
 
         mod animations {
+            use crate::{Bsp, Decode};
             use claim::assert_ok;
             use std::fs::File;
             use test_case::test_case;
-
-            use super::*;
 
             #[test_case("aether_anims" ; "aether_anims")]
             #[test_case("arclight_anims" ; "arclight_anims")]
@@ -172,8 +169,6 @@ mod tests {
         use std::fs::File;
         use test_case::test_case;
 
-        use super::*;
-
         #[test_case("blairwisp" ; "blairwisp")]
         #[test_case("blues" ; "blues")]
         #[test_case("calamity" ; "calamity")]
@@ -204,8 +199,6 @@ mod tests {
         use claim::assert_ok;
         use std::fs::File;
         use test_case::test_case;
-
-        use super::*;
 
         #[test_case("armybase" ; "armybase")]
         #[test_case("Asylum" ; "asylum")]
