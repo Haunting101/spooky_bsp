@@ -9,7 +9,7 @@ pub struct Light {
     pub light_type: i32,
     pub flags: u32,
     pub radius: f32,
-    pub light_color: Rgba<u8>,
+    pub light_color: Rgba,
     pub cone_angle: f32,
     pub photon_light_abs_scale: f32,
     pub light_switch_layer_index: u32,

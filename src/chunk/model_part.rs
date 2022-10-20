@@ -103,7 +103,7 @@ pub struct Vertex {
     pub vertex: Option<Vector3>,
     pub normal: Option<Vector3>,
     pub reciprocal_homogeneous_w: Option<f32>,
-    pub diffuse: Option<Rgba<u8>>,
+    pub diffuse: Option<Rgba>,
     pub weight: Option<f32>,
     pub indices: Option<(u16, u16)>,
     pub uvs: Vec<(f32, f32)>,
@@ -136,7 +136,7 @@ impl Decode<u32> for Vertex {
         };
 
         let diffuse = if flags & HAS_DIFFUSE != 0 {
-            let diffuse = Rgba::<u8>::decode(reader, ())?;
+            let diffuse = Rgba::decode(reader, ())?;
 
             Some(diffuse)
         } else {

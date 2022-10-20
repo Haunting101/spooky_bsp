@@ -15,8 +15,8 @@ impl Decode for Material {
         let flags = u32::decode(reader, ())?;
         let _name_hash = u32::decode(reader, ())?;
         let additive_lighting_model = bool::decode(reader, ())?;
-        let colour = Rgba::<i32>::decode(reader, ())?;
-        let specular = Rgba::<i32>::decode(reader, ())?;
+        let colour = I32Encoded::<Rgba>::decode(reader, ())?;
+        let specular = I32Encoded::<Rgba>::decode(reader, ())?;
         let power = f32::decode(reader, ())?;
         let shading_mode = i32::decode(reader, ())?;
         let blend = bool::decode(reader, ())?;
@@ -64,8 +64,8 @@ impl Decode for Material {
 pub struct Attributes {
     pub flags: u32,
     pub additive_lighting_model: bool,
-    pub colour: Rgba<i32>,
-    pub specular: Rgba<i32>,
+    pub colour: Rgba,
+    pub specular: Rgba,
     pub power: f32,
     pub shading_mode: i32,
     pub depth_buffer_write: bool,
@@ -89,21 +89,21 @@ pub struct MaterialTexture {
     pub filter: i32,
     pub address: i32,
     pub mask_name: String,
-    pub border_colour: Rgba<i32>,
+    pub border_colour: Rgba,
     pub hash: u32,
 }
 
 impl Decode for MaterialTexture {
     fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
         let uv_set = u32::decode(reader, ())?;
-        let name = NullTerminated::<I32Encoded<String>>::decode(reader, ())?;
+        let name = I32Encoded::<NullTerminated<String>>::decode(reader, ())?;
 
         if name.len() > 0 {
             let format = i32::decode(reader, ())?;
             let filter = i32::decode(reader, ())?;
             let address = i32::decode(reader, ())?;
-            let mask_name = NullTerminated::<I32Encoded<String>>::decode(reader, ())?;
-            let border_colour = Rgba::<i32>::decode(reader, ())?;
+            let mask_name = I32Encoded::<NullTerminated<String>>::decode(reader, ())?;
+            let border_colour = I32Encoded::<Rgba>::decode(reader, ())?;
             let hash = u32::decode(reader, ())?;
 
             Ok(MaterialTexture::new(
@@ -121,7 +121,7 @@ impl Decode for MaterialTexture {
             let filter = 0;
             let address = 0;
             let mask_name = String::new();
-            let border_colour = Rgba::<i32>::default();
+            let border_colour = Rgba::default();
             let hash = 0;
 
             Ok(MaterialTexture::new(

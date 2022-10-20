@@ -98,7 +98,7 @@ impl Decode for String {
     }
 }
 
-impl Decode for NullTerminated<I32Encoded<String>> {
+impl Decode for I32Encoded<NullTerminated<String>> {
     type Output = String;
 
     fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self::Output> {

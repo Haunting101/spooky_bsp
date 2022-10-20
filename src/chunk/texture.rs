@@ -12,23 +12,23 @@ pub struct Texture {
     pub filter: i32,
     pub address: i32,
     pub format: i32,
-    pub border_color: Rgba<i32>,
-    pub pixels: Vec<Rgba<i32>>,
+    pub border_color: Rgba,
+    pub pixels: Vec<Rgba>,
 }
 
 impl Decode for Texture {
     fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Texture> {
-        let name = NullTerminated::<I32Encoded<String>>::decode(reader, ())?;
-        let mask_name = NullTerminated::<I32Encoded<String>>::decode(reader, ())?;
+        let name = I32Encoded::<NullTerminated<String>>::decode(reader, ())?;
+        let mask_name = I32Encoded::<NullTerminated<String>>::decode(reader, ())?;
         let width = i32::decode(reader, ())?;
         let height = i32::decode(reader, ())?;
         let filter = i32::decode(reader, ())?;
         let address = i32::decode(reader, ())?;
         let format = i32::decode(reader, ())?;
-        let border_color = Rgba::<i32>::decode(reader, ())?;
+        let border_color = I32Encoded::<Rgba>::decode(reader, ())?;
         let pixels = (0..width * height)
             .into_iter()
-            .map(|_| Rgba::decode(reader, ()))
+            .map(|_| I32Encoded::<Rgba>::decode(reader, ()))
             .collect::<Result<Vec<_>, _>>()?;
 
         Ok(Texture::new(

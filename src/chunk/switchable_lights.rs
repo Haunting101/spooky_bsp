@@ -95,7 +95,7 @@ impl Decode<i32> for LightMapUpdateBlock {
 
         let additive_data = (0..pixels)
             .into_iter()
-            .map(|_| Rgba::<u8>::decode(reader, ()))
+            .map(|_| Rgba::decode(reader, ()))
             .collect::<Result<Vec<_>, _>>()?;
 
         Ok(Self {})
@@ -151,13 +151,13 @@ impl Decode for SingleVertexSwitchBlock {
 #[derive(new, Clone, Debug)]
 pub struct UpdateRGBA {
     pub vertex_index: u32,
-    pub color: Rgba<u8>,
+    pub color: Rgba,
 }
 
 impl Decode for UpdateRGBA {
     fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
         let vertex_index = u32::decode(reader, ())?;
-        let color = Rgba::<u8>::decode(reader, ())?;
+        let color = Rgba::decode(reader, ())?;
 
         Ok(UpdateRGBA::new(vertex_index, color))
     }

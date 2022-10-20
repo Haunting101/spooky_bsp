@@ -6,7 +6,7 @@ use crate::{BoundingBox, Decode, Rgb, Rgba};
 #[derive(new, Clone, Debug)]
 pub struct World {
     pub flags: u32,
-    pub ambient: Rgba<u8>,
+    pub ambient: Rgba,
     pub floors: Vec<Floor>,
     pub zone_count: i32,
     pub have_occlusion_bsp: bool,
@@ -18,7 +18,7 @@ pub struct World {
 impl Decode for World {
     fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
         let flags = u32::decode(reader, ())?;
-        let ambient = Rgb::<u8>::decode(reader, ())?.into();
+        let ambient = Rgb::decode(reader, ())?.into();
         let floors = Vec::decode(reader, ())?;
         let zone_count = i32::decode(reader, ())?;
         let have_occlusion_bsp = bool::decode(reader, ())?;

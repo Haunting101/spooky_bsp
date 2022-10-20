@@ -1,56 +1,69 @@
-use crate::Decode;
+use crate::{Decode, I32Encoded};
 use std::io::Read;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Rgb<T> {
-    pub r: T,
-    pub g: T,
-    pub b: T,
+pub struct Rgb {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
 }
 
-impl<T> Rgb<T> {
-    pub fn new(r: T, g: T, b: T) -> Self {
+impl Rgb {
+    pub fn new(r: u8, g: u8, b: u8) -> Self {
         Self { r, g, b }
     }
 }
 
-impl<T: Decode<Output = T>> Decode for Rgb<T> {
+impl Decode for Rgb {
     fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
         Ok(Self::new(
-            T::decode(reader, ())?,
-            T::decode(reader, ())?,
-            T::decode(reader, ())?,
+            u8::decode(reader, ())?,
+            u8::decode(reader, ())?,
+            u8::decode(reader, ())?,
         ))
     }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Rgba<T> {
-    pub r: T,
-    pub g: T,
-    pub b: T,
-    pub a: T,
+pub struct Rgba {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8,
 }
 
-impl<T> Rgba<T> {
-    pub fn new(r: T, g: T, b: T, a: T) -> Self {
+impl Rgba {
+    pub fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
         Self { r, g, b, a }
     }
 }
 
-impl<T: Decode<Output = T>> Decode for Rgba<T> {
+impl Decode for Rgba {
     fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
         Ok(Self::new(
-            T::decode(reader, ())?,
-            T::decode(reader, ())?,
-            T::decode(reader, ())?,
-            T::decode(reader, ())?,
+            u8::decode(reader, ())?,
+            u8::decode(reader, ())?,
+            u8::decode(reader, ())?,
+            u8::decode(reader, ())?,
         ))
     }
 }
 
-impl<T: Default> From<Rgb<T>> for Rgba<T> {
-    fn from(rgb: Rgb<T>) -> Self {
-        Self::new(rgb.r, rgb.g, rgb.b, T::default())
+impl Decode for I32Encoded<Rgba> {
+    type Output = Rgba;
+
+    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self::Output> {
+        Ok(Rgba::new(
+            i32::decode(reader, ())? as u8,
+            i32::decode(reader, ())? as u8,
+            i32::decode(reader, ())? as u8,
+            i32::decode(reader, ())? as u8,
+        ))
+    }
+}
+
+impl From<Rgb> for Rgba {
+    fn from(rgb: Rgb) -> Self {
+        Self::new(rgb.r, rgb.g, rgb.b, u8::default())
     }
 }
