@@ -1,9 +1,10 @@
-use derive_new::new;
 use std::io::Read;
 
-use crate::{Decode, I32Encoded, NullTerminated, Rgba};
+use crate::{Decode, DecodeError, I32Encoded, NullTerminated, Rgba};
 
-#[derive(new, Clone, Debug)]
+pub type Textures = Vec<Texture>;
+
+#[derive(Clone, Debug)]
 pub struct Texture {
     pub name: String,
     pub mask_name: String,
@@ -17,7 +18,7 @@ pub struct Texture {
 }
 
 impl Decode for Texture {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Texture> {
+    fn decode(reader: &mut impl Read, _state: ()) -> Result<Self, DecodeError> {
         let name = I32Encoded::<NullTerminated<String>>::decode(reader, ())?;
         let mask_name = I32Encoded::<NullTerminated<String>>::decode(reader, ())?;
         let width = i32::decode(reader, ())?;
@@ -31,7 +32,7 @@ impl Decode for Texture {
             .map(|_| I32Encoded::<Rgba>::decode(reader, ()))
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(Texture::new(
+        Ok(Self {
             name,
             mask_name,
             width,
@@ -41,6 +42,6 @@ impl Decode for Texture {
             format,
             border_color,
             pixels,
-        ))
+        })
     }
 }

@@ -1,7 +1,6 @@
-use derive_new::new;
 use std::io::Read;
 
-use crate::{Decode, Rgba, Vector3};
+use crate::{Decode, DecodeError, Rgba, Vector3};
 
 const HAS_VERTEX: u32 = 1 << 8;
 const HAS_RECIPROCAL_HOMOGENEOUS_W: u32 = 1 << 9;
@@ -11,7 +10,7 @@ const HAS_WEIGHT: u32 = 1 << 12;
 const HAS_INDICES: u32 = 1 << 13;
 const UV_COUNT_MASK: u32 = 0xFF;
 
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct ModelPart {
     pub read_access_flags: u32,
     pub vertex_read_flags: u32,
@@ -38,7 +37,7 @@ pub struct ModelPart {
 }
 
 impl Decode for ModelPart {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+    fn decode(reader: &mut impl Read, _state: ()) -> Result<Self, DecodeError> {
         let read_access_flags = u32::decode(reader, ())?;
         let vertex_read_flags = u32::decode(reader, ())?;
         let write_access_flags = u32::decode(reader, ())?;
@@ -71,7 +70,7 @@ impl Decode for ModelPart {
             .map(|_| Index::decode(reader, ()))
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(Self::new(
+        Ok(Self {
             read_access_flags,
             vertex_read_flags,
             write_access_flags,
@@ -94,11 +93,11 @@ impl Decode for ModelPart {
             lighting_sid,
             vertices,
             indices,
-        ))
+        })
     }
 }
 
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Vertex {
     pub vertex: Option<Vector3>,
     pub normal: Option<Vector3>,
@@ -110,7 +109,7 @@ pub struct Vertex {
 }
 
 impl Decode<u32> for Vertex {
-    fn decode(reader: &mut impl Read, flags: u32) -> eyre::Result<Self> {
+    fn decode(reader: &mut impl Read, flags: u32) -> Result<Self, DecodeError> {
         let vertex = if flags & HAS_VERTEX != 0 {
             let vertex = Vector3::decode(reader, ())?;
 
@@ -169,7 +168,7 @@ impl Decode<u32> for Vertex {
             uvs.push((u, v));
         }
 
-        Ok(Self::new(
+        Ok(Self {
             vertex,
             normal,
             reciprocal_homogeneous_w,
@@ -177,23 +176,13 @@ impl Decode<u32> for Vertex {
             weight,
             indices,
             uvs,
-        ))
+        })
     }
 }
 
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug, Decode)]
 pub struct Index {
     pub index0: u32,
     pub index1: u32,
     pub index2: u32,
-}
-
-impl Decode for Index {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self::Output> {
-        Ok(Self::new(
-            u32::decode(reader, ())?,
-            u32::decode(reader, ())?,
-            u32::decode(reader, ())?,
-        ))
-    }
 }

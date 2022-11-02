@@ -52,7 +52,7 @@ pub use texture::*;
 pub use world::*;
 pub use zones::*;
 
-use crate::Decode;
+use crate::{Decode, DecodeError};
 use std::io::Read;
 
 use num_enum::TryFromPrimitive;
@@ -85,15 +85,16 @@ pub enum Chunk {
     SpLights(SwitchableLights),
     Entities(Entities),
     Entity(Entity),
-    Textures(Vec<Texture>),
+    Textures(Textures),
 }
 
-impl Decode<Option<&World>> for Chunk {
-    fn decode(reader: &mut impl Read, world: Option<&World>) -> eyre::Result<Self> {
-        let chunk_header = ChunkHeader::decode(reader, ())?;
-
+impl Decode<(ChunkHeader, Option<&World>)> for Chunk {
+    fn decode(
+        reader: &mut impl Read,
+        (chunk_header, world): (ChunkHeader, Option<&World>),
+    ) -> Result<Self, DecodeError> {
         Ok(match chunk_header.get_chunk_type() {
-            ChunkType::Textures => Chunk::Textures(Vec::decode(reader, ())?),
+            ChunkType::Textures => Chunk::Textures(Textures::decode(reader, ())?),
             ChunkType::Materials => {
                 let material_count = i32::decode(reader, ())?;
 
@@ -188,7 +189,7 @@ impl ChunkHeader {
 }
 
 impl Decode for ChunkHeader {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+    fn decode(reader: &mut impl Read, _state: ()) -> Result<Self, DecodeError> {
         let chunk_type = ChunkType::try_from(i32::decode(reader, ())?)?;
         let size = {
             let size = i32::decode(reader, ())?;

@@ -1,16 +1,21 @@
-use crate::{Decode, Rectangle, Rgba};
+use crate::{Decode, DecodeError, Rectangle, Rgba};
 
-use derive_new::new;
 use std::io::Read;
 
 const STORE_LAYER_REMAP_COUNT: u32 = 3;
 const UPDATE_SUBRECTS_COUNT: u32 = 2;
 
 #[derive(Clone, Debug)]
-pub struct SwitchableLights {}
+pub struct SwitchableLights {
+    pub gamma_ramp_power: f32,
+    pub layer_remap_table: Option<Vec<u32>>,
+    pub light_maps: Vec<SwitchableLightMap>,
+    pub light_data: Vec<SwitchableLightData>,
+    pub material_blocks: Vec<MaterialBlockSwitchInfo>,
+}
 
 impl Decode for SwitchableLights {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+    fn decode(reader: &mut impl Read, _state: ()) -> Result<Self, DecodeError> {
         let magic = u32::decode(reader, ())?;
 
         assert!(magic <= 3);
@@ -21,41 +26,36 @@ impl Decode for SwitchableLights {
             4.0
         };
 
-        if magic >= STORE_LAYER_REMAP_COUNT {
-            let source_layer_count = u32::decode(reader, ())?;
-            let layer_remap_table = (0..source_layer_count)
-                .into_iter()
-                .map(|_| u32::decode(reader, ()))
-                .collect::<Result<Vec<_>, _>>()?;
-        }
+        let layer_remap_table = if magic >= STORE_LAYER_REMAP_COUNT {
+            Some(Vec::decode(reader, ())?)
+        } else {
+            None
+        };
 
-        let light_map_count = u32::decode(reader, ())?;
-        let light_maps = (0..light_map_count)
-            .into_iter()
-            .map(|_| SwitchableLightMap::decode(reader, magic))
-            .collect::<Result<Vec<_>, _>>()?;
-        let light_data_count = u32::decode(reader, ())?;
-        let light_data = (0..light_data_count)
-            .into_iter()
-            .map(|_| SwitchableLightData::decode(reader, ()))
-            .collect::<Result<Vec<_>, _>>()?;
-        let material_block_count = u32::decode(reader, ())?;
-        let material_blocks = (0..material_block_count)
-            .into_iter()
-            .map(|_| MaterialBlockSwitchInfo::decode(reader, ()))
-            .collect::<Result<Vec<_>, _>>()?;
+        let light_maps = Vec::decode(reader, magic)?;
+        let light_data = Vec::decode(reader, ())?;
+        let material_blocks = Vec::decode(reader, ())?;
 
-        Ok(Self {})
+        Ok(Self {
+            gamma_ramp_power,
+            layer_remap_table,
+            light_maps,
+            light_data,
+            material_blocks,
+        })
     }
 }
 
 #[derive(Clone, Debug)]
-pub struct SwitchableLightMap {}
-
-impl SwitchableLightMap {}
+pub struct SwitchableLightMap {
+    pub texture_hash: u32,
+    pub name: String,
+    pub update_region: Rectangle,
+    pub update_blocks: Vec<LightMapUpdateBlock>,
+}
 
 impl Decode<u32> for SwitchableLightMap {
-    fn decode(reader: &mut impl Read, magic: u32) -> eyre::Result<Self> {
+    fn decode(reader: &mut impl Read, magic: u32) -> Result<Self, DecodeError> {
         let texture_hash = u32::decode(reader, ())?;
         let name = (0..12)
             .into_iter()
@@ -74,15 +74,23 @@ impl Decode<u32> for SwitchableLightMap {
             .map(|_| LightMapUpdateBlock::decode(reader, pixels_to_read))
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(Self {})
+        Ok(Self {
+            texture_hash,
+            name,
+            update_region,
+            update_blocks,
+        })
     }
 }
 
 #[derive(Clone, Debug)]
-pub struct LightMapUpdateBlock {}
+pub struct LightMapUpdateBlock {
+    pub layer_index: u32,
+    pub additive_data: Vec<Rgba>,
+}
 
 impl Decode<i32> for LightMapUpdateBlock {
-    fn decode(reader: &mut impl Read, pixels_to_read: i32) -> eyre::Result<Self> {
+    fn decode(reader: &mut impl Read, pixels_to_read: i32) -> Result<Self, DecodeError> {
         let layer_index = u32::decode(reader, ())?;
 
         let pixels = if pixels_to_read == 0 {
@@ -98,91 +106,34 @@ impl Decode<i32> for LightMapUpdateBlock {
             .map(|_| Rgba::decode(reader, ()))
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(Self {})
+        Ok(Self {
+            layer_index,
+            additive_data,
+        })
     }
 }
 
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug, Decode)]
 pub struct SwitchableLightData {
     pub dependent_light_maps: Vec<u32>,
     pub vertex_blocks: Vec<SingleVertexSwitchBlock>,
 }
 
-impl Decode for SwitchableLightData {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
-        let dependent_light_map_count = u32::decode(reader, ())?;
-        let dependent_light_maps = (0..dependent_light_map_count)
-            .into_iter()
-            .map(|_| u32::decode(reader, ())) // Indices
-            .collect::<Result<Vec<_>, _>>()?;
-
-        let vertex_block_count = u32::decode(reader, ())?;
-        let vertex_blocks = (0..vertex_block_count)
-            .into_iter()
-            .map(|_| SingleVertexSwitchBlock::decode(reader, ()))
-            .collect::<Result<Vec<_>, _>>()?;
-
-        Ok(SwitchableLightData::new(
-            dependent_light_maps,
-            vertex_blocks,
-        ))
-    }
-}
-
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug, Decode)]
 pub struct SingleVertexSwitchBlock {
     pub material_block_index: u32,
     pub updates: Vec<UpdateRGBA>,
 }
 
-impl Decode for SingleVertexSwitchBlock {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
-        let material_block_index = u32::decode(reader, ())?;
-        let update_vertices_count = u32::decode(reader, ())?;
-        let updates = (0..update_vertices_count)
-            .into_iter()
-            .map(|_| UpdateRGBA::decode(reader, ()))
-            .collect::<Result<Vec<_>, _>>()?;
-
-        Ok(SingleVertexSwitchBlock::new(material_block_index, updates))
-    }
-}
-
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug, Decode)]
 pub struct UpdateRGBA {
     pub vertex_index: u32,
     pub color: Rgba,
 }
 
-impl Decode for UpdateRGBA {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
-        let vertex_index = u32::decode(reader, ())?;
-        let color = Rgba::decode(reader, ())?;
-
-        Ok(UpdateRGBA::new(vertex_index, color))
-    }
-}
-
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug, Decode)]
 pub struct MaterialBlockSwitchInfo {
     pub lighting_id: u32,
     pub is_world_geometry: bool,
-}
-
-impl Decode for MaterialBlockSwitchInfo {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
-        let lighting_id = u32::decode(reader, ())?;
-        let is_world_geometry = u32::decode(reader, ())? == 1;
-        let vertices_count = u32::decode(reader, ())?;
-        let current_vertex_light = vec![NonSatRGB::default(); vertices_count as usize];
-
-        Ok(MaterialBlockSwitchInfo::new(lighting_id, is_world_geometry))
-    }
-}
-
-#[derive(Clone, Copy, Debug, Default)]
-pub struct NonSatRGB {
-    pub r: u16,
-    pub g: u16,
-    pub b: u16,
+    pub vertices_count: u32,
 }

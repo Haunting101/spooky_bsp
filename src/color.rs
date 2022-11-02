@@ -1,7 +1,7 @@
-use crate::{Decode, I32Encoded};
+use crate::{Decode, DecodeError, I32Encoded};
 use std::io::Read;
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Default, Decode, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Rgb {
     pub r: u8,
     pub g: u8,
@@ -14,17 +14,7 @@ impl Rgb {
     }
 }
 
-impl Decode for Rgb {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
-        Ok(Self::new(
-            u8::decode(reader, ())?,
-            u8::decode(reader, ())?,
-            u8::decode(reader, ())?,
-        ))
-    }
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Default, Decode, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Rgba {
     pub r: u8,
     pub g: u8,
@@ -38,21 +28,10 @@ impl Rgba {
     }
 }
 
-impl Decode for Rgba {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
-        Ok(Self::new(
-            u8::decode(reader, ())?,
-            u8::decode(reader, ())?,
-            u8::decode(reader, ())?,
-            u8::decode(reader, ())?,
-        ))
-    }
-}
-
 impl Decode for I32Encoded<Rgba> {
     type Output = Rgba;
 
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self::Output> {
+    fn decode(reader: &mut impl Read, _state: ()) -> Result<Self::Output, DecodeError> {
         Ok(Rgba::new(
             i32::decode(reader, ())? as u8,
             i32::decode(reader, ())? as u8,

@@ -1,23 +1,39 @@
-use crate::{Chunk, Decode, PositionTracker};
-use derive_new::new;
+use crate::{Chunk, ChunkHeader, Decode, DecodeError, PeekableReader, PositionTracker};
 use flate2::read::GzDecoder;
-use std::io::Read;
+use std::io::{ErrorKind, Read};
 
-#[derive(new)]
+const GZIP_MAGIC_NUMBER: [u8; 2] = [0x1f, 0x8b];
+
 pub struct Bsp {
     pub chunks: Vec<Chunk>,
 }
 
 impl Decode for Bsp {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
-        let mut decoder = PositionTracker::new(GzDecoder::new(reader));
+    fn decode(reader: &mut impl Read, _state: ()) -> Result<Self, DecodeError> {
+        let mut reader: PositionTracker<Box<dyn Read>> = {
+            let mut reader = PeekableReader::new(reader);
+
+            let magic_number = dbg!(reader.peek::<2>()?);
+
+            if magic_number == GZIP_MAGIC_NUMBER {
+                PositionTracker::new(Box::new(GzDecoder::new(reader)))
+            } else {
+                PositionTracker::new(Box::new(reader))
+            }
+        };
+
         let mut chunks = Vec::new();
 
         let mut latest_world = None;
 
         loop {
-            match Chunk::decode(&mut decoder, latest_world.as_ref()) {
-                Ok(chunk) => {
+            match dbg!(ChunkHeader::decode(&mut reader, ())) {
+                Ok(chunk_header) => {
+                    let expected_size = chunk_header.get_size() as usize;
+                    let previous_position = reader.position();
+
+                    let chunk = Chunk::decode(&mut reader, (chunk_header, latest_world.as_ref()))?;
+
                     match chunk {
                         Chunk::World(ref current_world) => {
                             latest_world = Some(current_world.clone());
@@ -26,12 +42,25 @@ impl Decode for Bsp {
                     }
 
                     chunks.push(chunk);
+
+                    let current_position = reader.position();
+                    let actual_size = current_position - previous_position;
+
+                    if expected_size != actual_size {
+                        return Err(DecodeError::ReadTooMuchData {
+                            expected: expected_size,
+                            actual: actual_size,
+                        });
+                    }
                 }
-                Err(_) => break,
+                Err(error) => match error {
+                    DecodeError::IO(error) if error.kind() == ErrorKind::UnexpectedEof => break,
+                    _ => return Err(error),
+                },
             }
         }
 
-        Ok(Bsp::new(chunks))
+        Ok(Bsp { chunks })
     }
 }
 
@@ -40,7 +69,7 @@ mod tests {
     mod ghosts {
         use crate::{Bsp, Decode};
         use claim::assert_ok;
-        use std::fs::File;
+        use std::{fs::File, io::BufReader};
         use test_case::test_case;
 
         #[test_case("aether.bsp" ; "aether")]
@@ -92,7 +121,7 @@ mod tests {
         #[test_case("windwalker.bsp" ; "windwalker")]
         fn decode_file(asset: &str) {
             assert_ok!(Bsp::decode(
-                &mut File::open(format!("assets/ghosts/{}", asset)).unwrap(),
+                &mut BufReader::new(File::open(format!("assets/ghosts/{}", asset)).unwrap()),
                 (),
             ));
         }
@@ -100,7 +129,7 @@ mod tests {
         mod animations {
             use crate::{Bsp, Decode};
             use claim::assert_ok;
-            use std::fs::File;
+            use std::{fs::File, io::BufReader};
             use test_case::test_case;
 
             #[test_case("aether_anims" ; "aether_anims")]
@@ -124,7 +153,6 @@ mod tests {
             #[test_case("firetail_anims" ; "firetail_anims")]
             #[test_case("flashjordan_anims" ; "flashjordan_anims")]
             #[test_case("ghastly_anims" ; "ghastly_anims")]
-            #[test_case("hardboiled_anims" ; "hardboiled_anims")]
             #[test_case("harriet_anims" ; "harriet_anims")]
             #[test_case("hogwash_anims" ; "hogwash_anims")]
             #[test_case("hypnos_anims" ; "hypnos_anims")]
@@ -146,17 +174,17 @@ mod tests {
             #[test_case("stonewall_anims" ; "stonewall_anims")]
             #[test_case("stormtalon_anims" ; "stormtalon_anims")]
             #[test_case("terroreyes_anims" ; "terroreyes_anims")]
-            #[test_case("thorne_anims" ; "thorne_anims")]
             #[test_case("wavemaster_anims" ; "wavemaster_anims")]
             #[test_case("weatherwitch_anims" ; "weatherwitch_anims")]
             #[test_case("wendel_anims" ; "wendel_anims")]
-            #[test_case("whirlweird_anims" ; "whirlweird_anims")]
             #[test_case("whisperwind_anims" ; "whisperwind_anims")]
             #[test_case("wily_anims" ; "wily_anims")]
             #[test_case("windwalker_anims" ; "windwalker_anims")]
             fn decode_file(asset: &str) {
                 assert_ok!(Bsp::decode(
-                    &mut File::open(format!("assets/ghosts/animations/{}.bsp", asset)).unwrap(),
+                    &mut BufReader::new(
+                        File::open(format!("assets/ghosts/animations/{}.bsp", asset)).unwrap()
+                    ),
                     (),
                 ));
             }
@@ -166,7 +194,7 @@ mod tests {
     mod scenarios {
         use crate::{Bsp, Decode};
         use claim::assert_ok;
-        use std::fs::File;
+        use std::{fs::File, io::BufReader};
         use test_case::test_case;
 
         #[test_case("blairwisp" ; "blairwisp")]
@@ -188,7 +216,9 @@ mod tests {
         #[test_case("weirdseance" ; "weirdseance")]
         fn decode_file(asset: &str) {
             assert_ok!(Bsp::decode(
-                &mut File::open(format!("assets/scenarios/{}/gamedata.bsp", asset)).unwrap(),
+                &mut BufReader::new(
+                    File::open(format!("assets/scenarios/{}/gamedata.bsp", asset)).unwrap()
+                ),
                 (),
             ));
         }
@@ -197,7 +227,7 @@ mod tests {
     mod levels {
         use crate::{Bsp, Decode};
         use claim::assert_ok;
-        use std::fs::File;
+        use std::{fs::File, io::BufReader};
         use test_case::test_case;
 
         #[test_case("armybase" ; "armybase")]
@@ -218,7 +248,7 @@ mod tests {
         #[test_case("summoners" ; "summoners")]
         fn decode_file(asset: &str) {
             assert_ok!(Bsp::decode(
-                &mut File::open(format!("assets/levels/{}.bsp", asset)).unwrap(),
+                &mut BufReader::new(File::open(format!("assets/levels/{}.bsp", asset)).unwrap()),
                 (),
             ));
         }

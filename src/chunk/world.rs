@@ -1,9 +1,8 @@
-use derive_new::new;
 use std::io::Read;
 
-use crate::{BoundingBox, Decode, Rgb, Rgba};
+use crate::{BoundingBox, Decode, DecodeError, Rgb, Rgba};
 
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct World {
     pub flags: u32,
     pub ambient: Rgba,
@@ -16,7 +15,7 @@ pub struct World {
 }
 
 impl Decode for World {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+    fn decode(reader: &mut impl Read, _state: ()) -> Result<Self, DecodeError> {
         let flags = u32::decode(reader, ())?;
         let ambient = Rgb::decode(reader, ())?.into();
         let floors = Vec::decode(reader, ())?;
@@ -26,7 +25,7 @@ impl Decode for World {
         let have_waypoints = bool::decode(reader, ())?;
         let have_mesh = bool::decode(reader, ())?;
 
-        Ok(Self::new(
+        Ok(Self {
             flags,
             ambient,
             floors,
@@ -35,21 +34,12 @@ impl Decode for World {
             have_nulls,
             have_waypoints,
             have_mesh,
-        ))
+        })
     }
 }
 
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug, Decode)]
 pub struct Floor {
     pub occlusion_bsp: u32,
     pub ghost_camera: BoundingBox,
-}
-
-impl Decode for Floor {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
-        let occlusion_bsp = u32::decode(reader, ())?;
-        let ghost_camera = BoundingBox::decode(reader, ())?;
-
-        Ok(Self::new(occlusion_bsp, ghost_camera))
-    }
 }

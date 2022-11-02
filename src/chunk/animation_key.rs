@@ -1,10 +1,9 @@
-use crate::{BoundingBox, Decode, QuantizedQuaternion, Vector3};
+use crate::{BoundingBox, Decode, DecodeError, QuantizedQuaternion, Vector3};
 
-use derive_new::new;
 use num_enum::TryFromPrimitive;
 use std::io::Read;
 
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct AnimationKey {
     pub type_: i32,
     pub target_hash: u32,
@@ -19,7 +18,7 @@ pub struct AnimationKey {
 }
 
 impl Decode for AnimationKey {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+    fn decode(reader: &mut impl Read, _state: ()) -> Result<Self, DecodeError> {
         let type_ = i32::decode(reader, ())?;
         let target_hash = u32::decode(reader, ())?;
         let time_step = f32::decode(reader, ())?;
@@ -28,16 +27,19 @@ impl Decode for AnimationKey {
         let bounding_box_maximum = Option::<BoundingBox>::decode(reader, ())?;
 
         let interpolation_type = Interpolation::decode(reader, ())?;
-        let has_times = bool::decode(reader, ())?;
 
-        let times = if has_times {
-            let times = (0..key_count)
-                .map(|_| f32::decode(reader, ()))
-                .collect::<Result<Vec<_>, _>>()?;
+        let times = {
+            let has_times = bool::decode(reader, ())?;
 
-            Some(times)
-        } else {
-            None
+            if has_times {
+                let times = (0..key_count)
+                    .map(|_| f32::decode(reader, ()))
+                    .collect::<Result<Vec<_>, _>>()?;
+
+                Some(times)
+            } else {
+                None
+            }
         };
 
         let keys = match AnimationKeyType::try_from(type_)? {
@@ -108,7 +110,7 @@ impl Decode for AnimationKey {
         let adaptive_differential_pulse_code_modulation =
             Option::<AdaptiveDifferentialPulseCodeModulation>::decode(reader, ())?;
 
-        Ok(Self::new(
+        Ok(Self {
             type_,
             target_hash,
             time_step,
@@ -118,7 +120,7 @@ impl Decode for AnimationKey {
             times,
             keys,
             adaptive_differential_pulse_code_modulation,
-        ))
+        })
     }
 }
 
@@ -130,8 +132,8 @@ pub enum Interpolation {
 }
 
 impl Decode for Interpolation {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
-        Ok(Interpolation::try_from(i32::decode(reader, ())?)?)
+    fn decode(reader: &mut impl Read, _state: ()) -> Result<Self, DecodeError> {
+        Ok(Self::try_from(i32::decode(reader, ())?)?)
     }
 }
 
@@ -155,60 +157,119 @@ pub enum AnimationKeys {
 }
 
 #[derive(Clone, Debug)]
-pub struct Shape {}
+pub enum Shape {
+    KeyFrame {
+        animated_vertices: KeyFrameAnimatedVertices,
+        normals: KeyFrameNormals,
+    },
+    NotKeyFrame {
+        animated_vertices: NotKeyFrameAnimatedVertices,
+        normals: NotKeyFrameNormals,
+    },
+}
 
 impl Decode for Shape {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+    fn decode(reader: &mut impl Read, _state: ()) -> Result<Self, DecodeError> {
         let key_frame = bool::decode(reader, ())?;
 
-        let animated_vertices = u16::decode(reader, ())?;
+        if key_frame {
+            let animated_vertices = {
+                let animated_vertices_count = u16::decode(reader, ())?;
 
-        if animated_vertices > 0 {
-            if !key_frame {
-                let indices = (0..animated_vertices)
-                    .into_iter()
-                    .map(|_| u16::decode(reader, ()))
-                    .collect::<Result<Vec<_>, _>>()?;
-                let elements = (0..animated_vertices)
-                    .into_iter()
-                    .map(|_| u16::decode(reader, ()))
-                    .collect::<Result<Vec<_>, _>>()?;
-            } else {
-                let elements = (0..animated_vertices)
+                let elements = (0..animated_vertices_count)
                     .into_iter()
                     .map(|_| Vector3::decode(reader, ()))
                     .collect::<Result<Vec<_>, _>>()?;
-            }
-        }
 
-        let normals = u16::decode(reader, ())?;
+                KeyFrameAnimatedVertices { elements }
+            };
 
-        if normals > 0 {
-            if !key_frame {
-                let indices = (0..normals)
-                    .into_iter()
-                    .map(|_| u16::decode(reader, ()))
-                    .collect::<Result<Vec<_>, _>>()?;
-                let elements = (0..normals)
-                    .into_iter()
-                    .map(|_| u16::decode(reader, ()))
-                    .collect::<Result<Vec<_>, _>>()?;
-            } else {
-                let elements = (0..normals)
+            let normals = {
+                let normals_count = u16::decode(reader, ())?;
+
+                let elements = (0..normals_count)
                     .into_iter()
                     .map(|_| Vector3::decode(reader, ()))
                     .collect::<Result<Vec<_>, _>>()?;
-            }
-        }
 
-        Ok(Self {})
+                KeyFrameNormals { elements }
+            };
+
+            Ok(Self::KeyFrame {
+                animated_vertices,
+                normals,
+            })
+        } else {
+            let animated_vertices = {
+                let animated_vertices_count = u16::decode(reader, ())?;
+
+                let indices = (0..animated_vertices_count)
+                    .into_iter()
+                    .map(|_| u16::decode(reader, ()))
+                    .collect::<Result<Vec<_>, _>>()?;
+                let elements = (0..animated_vertices_count)
+                    .into_iter()
+                    .map(|_| u16::decode(reader, ()))
+                    .collect::<Result<Vec<_>, _>>()?;
+
+                NotKeyFrameAnimatedVertices { indices, elements }
+            };
+
+            let normals = {
+                let normals_count = u16::decode(reader, ())?;
+
+                let indices = (0..normals_count)
+                    .into_iter()
+                    .map(|_| u16::decode(reader, ()))
+                    .collect::<Result<Vec<_>, _>>()?;
+                let elements = (0..normals_count)
+                    .into_iter()
+                    .map(|_| u16::decode(reader, ()))
+                    .collect::<Result<Vec<_>, _>>()?;
+
+                NotKeyFrameNormals { indices, elements }
+            };
+
+            Ok(Self::NotKeyFrame {
+                animated_vertices,
+                normals,
+            })
+        }
     }
 }
 
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug)]
+pub struct KeyFrameAnimatedVertices {
+    pub elements: Vec<Vector3>,
+}
+
+#[derive(Clone, Debug)]
+pub struct NotKeyFrameAnimatedVertices {
+    pub indices: Vec<u16>,
+    pub elements: Vec<u16>,
+}
+
+#[derive(Clone, Debug)]
+pub struct KeyFrameNormals {
+    pub elements: Vec<Vector3>,
+}
+
+#[derive(Clone, Debug)]
+pub struct NotKeyFrameNormals {
+    pub indices: Vec<u16>,
+    pub elements: Vec<u16>,
+}
+
+#[derive(Clone, Debug)]
 pub struct Uv {
     pub u: u16,
     pub v: u16,
+}
+
+impl Uv {
+    pub fn new(u: u16, v: u16) -> Self {
+        Self { u, v }
+    }
 }
 
 #[derive(Clone, Debug, TryFromPrimitive, PartialEq, Eq)]
@@ -219,28 +280,17 @@ pub enum VisibilityState {
 }
 
 impl Decode for VisibilityState {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
-        Ok(VisibilityState::try_from(u8::decode(reader, ())?)?)
+    fn decode(reader: &mut impl Read, _state: ()) -> Result<Self, DecodeError> {
+        Ok(Self::try_from(u8::decode(reader, ())?)?)
     }
 }
 
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug, Decode)]
 pub struct AdaptiveDifferentialPulseCodeModulation {
     pub vertex_type: AdaptiveDifferentialPulseCodeModulationType,
     pub normal_type: AdaptiveDifferentialPulseCodeModulationType,
     pub vertex_range: Vector3,
     pub normal_range: Vector3,
-}
-
-impl Decode for AdaptiveDifferentialPulseCodeModulation {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
-        Ok(Self::new(
-            AdaptiveDifferentialPulseCodeModulationType::decode(reader, ())?,
-            AdaptiveDifferentialPulseCodeModulationType::decode(reader, ())?,
-            Vector3::decode(reader, ())?,
-            Vector3::decode(reader, ())?,
-        ))
-    }
 }
 
 #[derive(Clone, Debug, TryFromPrimitive, PartialEq, Eq)]
@@ -252,7 +302,7 @@ pub enum AdaptiveDifferentialPulseCodeModulationType {
 }
 
 impl Decode for AdaptiveDifferentialPulseCodeModulationType {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+    fn decode(reader: &mut impl Read, _state: ()) -> Result<Self, DecodeError> {
         Ok(Self::try_from(i32::decode(reader, ())?)?)
     }
 }

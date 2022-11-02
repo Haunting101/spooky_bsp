@@ -1,9 +1,8 @@
-use derive_new::new;
 use std::io::Read;
 
-use crate::{Decode, Vector3};
+use crate::{Decode, DecodeError, Vector3};
 
-#[derive(new, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Spline {
     pub points: Vec<Vector3>,
     pub closed: bool,
@@ -11,7 +10,7 @@ pub struct Spline {
 }
 
 impl Decode for Spline {
-    fn decode(reader: &mut impl Read, _state: ()) -> eyre::Result<Self> {
+    fn decode(reader: &mut impl Read, _state: ()) -> Result<Self, DecodeError> {
         let points_count = u32::decode(reader, ())?;
         let closed = bool::decode(reader, ())?;
         let type_ = u32::decode(reader, ())?;
@@ -20,6 +19,10 @@ impl Decode for Spline {
             .map(|_| Vector3::decode(reader, ()))
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(Self::new(points, closed, type_))
+        Ok(Self {
+            points,
+            closed,
+            type_,
+        })
     }
 }
