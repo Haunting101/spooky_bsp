@@ -13,7 +13,7 @@ impl Decode for Bsp {
         let mut reader: PositionTracker<Box<dyn Read>> = {
             let mut reader = PeekableReader::new(reader);
 
-            let magic_number = dbg!(reader.peek::<2>()?);
+            let magic_number = reader.peek::<2>()?;
 
             if magic_number == GZIP_MAGIC_NUMBER {
                 PositionTracker::new(Box::new(GzDecoder::new(reader)))
