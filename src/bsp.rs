@@ -27,7 +27,7 @@ impl Decode for Bsp {
         let mut latest_world = None;
 
         loop {
-            match dbg!(ChunkHeader::decode(&mut reader, ())) {
+            match ChunkHeader::decode(&mut reader, ()) {
                 Ok(chunk_header) => {
                     let expected_size = chunk_header.get_size() as usize;
                     let previous_position = reader.position();
